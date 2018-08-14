@@ -35,4 +35,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'middleware' => ['auth:api']], f
       'data' => UserSerializer::serialize($request->user()),
     ];
   }]);
+
+  Route::get('ping', ['as' => 'ping', 'uses' => function () {
+    return 'pong';
+  }]);
+
 });

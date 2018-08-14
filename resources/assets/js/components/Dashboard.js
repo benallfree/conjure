@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { AsyncBase } from './AsyncBase'
+import { Api } from '../Api'
 
 class Dashboard extends AsyncBase {
   state = {
@@ -7,7 +8,7 @@ class Dashboard extends AsyncBase {
   }
 
   loadData() {
-    return axios.get('/api/user')
+    return Api.getCurrentUser()
   }
 
   renderLoaded() {

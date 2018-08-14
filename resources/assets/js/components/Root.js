@@ -4,7 +4,7 @@ import { Dashboard } from './Dashboard'
 
 const Root = () => (
   <Router>
-    <Route path="/asdf" component={Dashboard} />
+    <Route exact path="/" component={Dashboard} />
   </Router>
 )
 

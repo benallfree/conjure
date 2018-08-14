@@ -1,15 +1,15 @@
-import { Url } from './Models'
+import { User } from './Models'
 
 class Api {
-  static async getTribeLinks(siteId, tribeName) {
+  static async getCurrentUser() {
     try {
-      const url = route('api.user', { siteId, tribeName })
+      const url = route('api.user')
       console.log('API GET', url)
       const response = await axios.get(url)
       console.log('api success', response)
       const apiResponse = response.data
       if (apiResponse.status !== 'ok') throw new Error(apiResponse.message)
-      const urls = Url.create(apiResponse.data)
+      const urls = new User(apiResponse.data)
       console.log('urls', urls)
       return urls
     } catch (e) {

@@ -28,14 +28,14 @@
         "jquery": "^3.2",
         "laravel-mix": "^2.0",
         "lodash": "^4.17.4",
+        "moment": "^2.22.2",
         "popper.js": "^1.12",
         "prettier": "^1.14.2",
         "react": "^16.2.0",
         "react-dom": "^16.2.0",
         "react-router-dom": "^4.3.1",
-        "semantic-ui-react": "^0.82.2",
-        "semantic-ui-css": "^2.3.3"
+        "semantic-ui-css": "^2.3.3",
+        "semantic-ui-react": "^0.82.2"
     },
-    "dependencies": {
-    }
+    "dependencies": {}
 }

@@ -1,25 +1,23 @@
 import moment from 'moment'
+import _ from 'lodash'
 
 export class ModelBase {
   constructor(item) {
-    for (let k in item) {
-      let v = item[k]
+    _.each(item, (v, k) => {
+      let final = _.clone(v)
       const mutators = {
         created_at: moment,
-        updated_at: moment
+        updated_at: moment,
       }
       if (mutators[k]) {
-        v = mutators[k](v)
+        final = mutators[k](v)
       }
-      this[k] = v
-    }
+      this[k] = final
+    })
   }
 
   static create(items) {
-    let ret = []
-    for (let i in items) {
-      ret.push(new this(items[i]))
-    }
+    const ret = _.map(items, (v, k) => new this(v))
     return ret
   }
 }

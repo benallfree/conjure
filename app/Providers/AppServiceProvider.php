@@ -14,9 +14,15 @@ class AppServiceProvider extends ServiceProvider
    */
   public function boot()
   {
+    if (env('USE_SSL', false)) {
+      // Force SSL routes
+      \URL::forceScheme('https');
+    }
+
     $this->registerPolicies();
 
-    Passport::routes();}
+    Passport::routes();
+  }
 
   protected $policies = [
   ];

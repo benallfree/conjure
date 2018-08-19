@@ -24,7 +24,7 @@ class AsyncBase extends Component {
     isLoading: true,
     error: null,
     data: null,
-    title: 'Async - override title in state',
+    title: null,
     contentStyle: {
       paddingTop: 0,
     },

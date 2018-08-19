@@ -2,6 +2,8 @@ import moment from 'moment'
 import _ from 'lodash'
 
 export class ModelBase {
+  static SAFETY_LIMIT = 1000
+
   constructor(item) {
     _.each(item, (v, k) => {
       let final = _.clone(v)
@@ -17,7 +19,11 @@ export class ModelBase {
   }
 
   static create(items) {
-    const ret = _.map(items, (v, k) => new this(v))
+    if (this.SAFETY_LIMIT && items.length > this.SAFETY_LIMIT) {
+      console.warn('Warning: truncating results for', items)
+    }
+    const arr = this.SAFETY_LIMIT ? items.slice(0, this.SAFETY_LIMIT) : items
+    const ret = _.map(arr, (v, k) => new this(v))
     return ret
   }
 }

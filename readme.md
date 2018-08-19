@@ -79,3 +79,66 @@ Edit `resources/views/layouts/app.blade.php`
   <a class="nav-link" href="/MyComponent">MyComponent</a>
 </li>
 ```
+
+### Creating a new model
+
+Create `resources/assets/js/Models/MyModel.js`
+
+```js
+import { ModelBase } from './ModelBase'
+
+class MyModel extends ModelBase {}
+
+export { MyModel }
+```
+
+### Creating a new API call
+
+Edit `routes/api.php`
+
+```php
+Route::group(['prefix' => 'v1', 'as' => 'api.', 'middleware' => ['auth:api']], function () {
+
+  Route::get('myApiCall', ['as' => 'myApiCall', 'uses' => function () {
+    return [
+      'status' => 'ok',
+      'data' => [
+        ['title'=>'result1',]
+        ['title'=>'result2']
+      ]
+    ];
+  }]);
+});
+```
+
+Test API route naming, notice `api.myApiCall` named route:
+
+```bash
+php artisan route:list | grep api
+...
+|        | GET|HEAD                               | api/v1/myApiCall                             | api.myApiCall         | Closure                                                                   | api,auth:api |
+```
+
+Create an API binding by editing `resources/assets/js/Api.js`
+
+```js
+import { SearchResult } from './Models/SearchResult'
+
+...
+
+async myApiCall() {
+  const response = await this.get(route('api.myApiCall'))
+  const results = new SearchResult(response.data)
+  return results
+}
+```
+
+Finally, create `resources/assets/js/Models/SearchResult.js` to receive your API results
+
+```js
+import { ModelBase } from './ModelBase'
+
+class SearchResult extends ModelBase {}
+
+export { SearchResult }
+```

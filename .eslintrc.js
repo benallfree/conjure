@@ -20,6 +20,7 @@ module.exports = {
     },
   },
   rules: {
+    'no-param-reassign': 1,
     'prettier/prettier': ['error', prettierOptions],
     'arrow-body-style': [2, 'as-needed'],
     'class-methods-use-this': 0,

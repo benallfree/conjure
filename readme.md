@@ -142,3 +142,7 @@ class SearchResult extends ModelBase {}
 
 export { SearchResult }
 ```
+
+### Secondary database connections
+
+http://fideloper.com/laravel-multiple-database-connections

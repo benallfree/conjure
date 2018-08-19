@@ -36,6 +36,12 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav mr-auto">
+                      @guest
+                      @else
+                        <li class="nav-item">
+                          <a class="nav-link" href="/">Dashboard</a>
+                        </li>
+                      @endguest
 
                     </ul>
 

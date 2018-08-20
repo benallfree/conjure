@@ -12,7 +12,7 @@ class ApiBase {
       console.log('api success', response)
       const apiResponse = response.data
       if (!apiResponse.status)
-        throw new Error(
+        throw new ApiError(
           `Invalid response - no Status detected - ${config.method}:${
             config.url
           }`,
@@ -23,9 +23,9 @@ class ApiBase {
       return apiResponse.data
     } catch (e) {
       const msg = `API ERROR: ${e}`
-      console.error(msg, e, e.response)
-      if (e.response && e.response.message) {
-        throw new ApiError(e.response.message)
+      console.error([msg, e, e.response.data.message])
+      if (e.response && e.response.data && e.response.data.message) {
+        throw new ApiError(e.response.data.message)
       }
       throw new ApiError(e)
     }

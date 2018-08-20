@@ -9,14 +9,10 @@ class Ping extends ComponentBase {
     this.async(() => Api.ping(), i)
   }
 
-  renderHeader() {
-    return <h1>Hello</h1>
-  }
-
   renderLoaded() {
     return (
       <Container>
-        {_.map(_.range(50), i => {
+        {_.map(_.range(5), i => {
           const { isLoaded, isLoading, response, error } = this.async(i)
           return (
             <Container key={i} style={{ marginBottom: 10 }}>

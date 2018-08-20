@@ -1,3 +1,5 @@
+import { ApiError } from './ApiError'
+
 class ApiBase {
   get(url) {
     return this.axios({ method: 'get', url })
@@ -15,15 +17,23 @@ class ApiBase {
             config.url
           }`,
         )
-      return apiResponse
+      if (apiResponse.status === 'error') {
+        throw new ApiError(apiResponse.message)
+      }
+      return apiResponse.data
     } catch (e) {
       const msg = `API ERROR: ${e}`
-      console.log(msg, e, e.response)
-      if (e.response && e.response.data && e.response.data.message) {
-        return { status: 'error', error: e.response.data.message }
+      console.error(msg, e, e.response)
+      if (e.response && e.response.message) {
+        throw new ApiError(e.response.message)
       }
-      return { status: 'error', error: e.message }
+      throw new ApiError(e)
     }
+  }
+
+  async ping() {
+    const response = await this.get(route('api.ping'))
+    return response
   }
 }
 

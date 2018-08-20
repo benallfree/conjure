@@ -20,6 +20,8 @@ module.exports = {
     },
   },
   rules: {
+    'no-multi-assign': 1,
+    'react/destructuring-assignment': 1,
     'no-param-reassign': 1,
     'prettier/prettier': ['error', prettierOptions],
     'arrow-body-style': [2, 'as-needed'],

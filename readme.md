@@ -46,7 +46,7 @@ import _ from 'lodash'
 import { Api } from '../../Api'
 import { AsyncBase } from '../AsyncBase'
 
-class Main extends AsyncBase {
+class Main extends ComponentBase {
   loadData() {
     return Api.ping()
   }
@@ -146,3 +146,51 @@ export { SearchResult }
 ### Secondary database connections
 
 http://fideloper.com/laravel-multiple-database-connections
+
+### Using ComponentBase
+
+The `ComponentBase` class handles complex asynchronous operations for you with ease.
+
+**`renderLoaded()` replaces `render`**
+
+Instead of calling `render()` directly, call `renderLoaded()`. This ensures that all initialization operations have completed first, even if they are async.
+
+**Type #1: Initializing with Async Data**
+
+If your component can't be used without first loading some async data, override the `loadData()` method. Your `renderLoaded()`
+
+**Type #2: Performing Async Operations**
+
+Calling async methods is easy. All exceptions are caught and handled:
+
+```js
+this.async(Api.ping)
+```
+
+Then, in `renderLoaded()`:
+
+```js
+# isLoading - true when loading
+# isLoaded - true after loading successfully
+# error - non-null if an error occurred
+# response - response after isLoaded=true
+const {isLoading, isLoaded, error, response} = this.async()
+```
+
+**Type #3: Performing many async operations**
+
+This is the real gold of the class. If you have many async operations to track, each which may have its own error state:
+
+```js
+this.async(Api.ping, 'someUniqueTrackingNameOrIndex')
+```
+
+Then, in `renderLoaded()`:
+
+```js
+# isLoading - true when loading
+# isLoaded - true after loading successfully
+# error - non-null if an error occurred
+# response - response after isLoaded=true
+const {isLoading, isLoaded, error, response} = this.async('someUniqueTrackingNameOrIndex')
+```

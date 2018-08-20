@@ -1,7 +1,9 @@
 import { Dashboard } from './components/Dashboard'
+import { Ping } from './components/Ping'
 
 const routes = {
-  '/': Dashboard,
+  '/dashboard': Dashboard,
+  '/': Ping,
 }
 
 export { routes }

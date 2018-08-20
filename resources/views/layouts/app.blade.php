@@ -36,10 +36,13 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav mr-auto">
+                      <li class="nav-item">
+                        <a class="nav-link" href="/">Ping</a>
+                      </li>
                       @guest
                       @else
                         <li class="nav-item">
-                          <a class="nav-link" href="/">Dashboard</a>
+                          <a class="nav-link" href="/dashboard">Dashboard</a>
                         </li>
                       @endguest
 

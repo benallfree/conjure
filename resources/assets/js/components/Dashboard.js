@@ -1,28 +1,35 @@
 import React, { Component } from 'react'
-import { AsyncBase } from './AsyncBase'
+import { Container, Card } from 'semantic-ui-react'
+import { ComponentBase } from './ComponentBase'
 import { Api } from '../Api'
 
-class Dashboard extends AsyncBase {
-  state = {
-    title: 'Dashboard',
+class Dashboard extends ComponentBase {
+  defaultState() {
+    return {
+      title: 'Dashboard',
+    }
   }
 
   loadData() {
     return Api.getCurrentUser()
   }
 
-  renderLoaded() {
+  renderLoaded(user) {
+    console.log(user)
     return (
-      <div className="container">
-        <div className="row justify-content-center">
-          <div className="col-md-8">
-            <div className="card">
-              <div className="card-header">Example Component</div>
-              <div className="card-body">{JSON.stringify(this.state.data)}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Container style={{ marginTop: 10 }}>
+        <Card>
+          <Card.Content>
+            <Card.Header>User Information</Card.Header>
+            <Card.Meta>{user.name}</Card.Meta>
+            <Card.Description>
+              <pre>
+                <code>{JSON.stringify(user, null, 2)}</code>
+              </pre>
+            </Card.Description>
+          </Card.Content>
+        </Card>
+      </Container>
     )
   }
 }

@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { Container, Card } from 'semantic-ui-react'
-import { ComponentBase } from './ComponentBase'
+import { ComponentBase } from './Kit'
 import { Api } from '../Api'
 
 class Dashboard extends ComponentBase {
@@ -15,7 +15,6 @@ class Dashboard extends ComponentBase {
   }
 
   renderLoaded(user) {
-    console.log(user)
     return (
       <Container style={{ marginTop: 10 }}>
         <Card>

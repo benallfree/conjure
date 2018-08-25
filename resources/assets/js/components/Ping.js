@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Container, Button, Message } from 'semantic-ui-react'
 import _ from 'lodash'
 import { Api } from '../Api'
-import { ComponentBase } from './ComponentBase'
+import { ComponentBase } from './Kit'
 
 class Ping extends ComponentBase {
   handlePing = i => {

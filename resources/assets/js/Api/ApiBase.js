@@ -1,8 +1,13 @@
 import { ApiError } from './ApiError'
+import { BusinessRuleError } from './BusinessRuleError'
 
 class ApiBase {
   get(url) {
     return this.axios({ method: 'get', url })
+  }
+
+  post(url, data) {
+    return this.axios({ method: 'post', url, data })
   }
 
   async axios(config) {
@@ -11,6 +16,7 @@ class ApiBase {
       const response = await axios(config)
       console.log('api success', response)
       const apiResponse = response.data
+
       if (!apiResponse.status)
         throw new ApiError(
           `Invalid response - no Status detected - ${config.method}:${
@@ -18,16 +24,27 @@ class ApiBase {
           }`,
         )
       if (apiResponse.status === 'error') {
-        throw new ApiError(apiResponse.message)
+        throw new BusinessRuleError(apiResponse)
       }
       return apiResponse.data
     } catch (e) {
-      const msg = `API ERROR: ${e}`
-      console.error([msg, e, e.response.data.message])
-      if (e.response && e.response.data && e.response.data.message) {
-        throw new ApiError(e.response.data.message)
+      if (
+        e.response &&
+        e.response.status === 401 &&
+        e.response.data &&
+        e.response.data.message === 'Unauthenticated.'
+      ) {
+        if (this.onNeedsAuthentication) {
+          await this.onNeedsAuthentication()
+          return this.axios(config)
+        }
+        throw new ApiError(
+          'Unauthenticated and no onNeedsAuthentication handler defined.',
+        )
       }
-      throw new ApiError(e)
+      const msg = `API ERROR: ${e}`
+      console.error(msg)
+      throw e
     }
   }
 

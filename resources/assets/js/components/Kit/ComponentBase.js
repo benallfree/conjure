@@ -33,10 +33,10 @@ class ComponentBase extends Component {
     this.reset()
     const p = this.loadData()
     if (p) {
-      this.async(() => p, '_boot')
+      this.async(() => p)
     } else {
       const { _async } = this.state
-      _async._boot.isLoaded = true
+      _async.default.isLoaded = true
       this.setState({ _async })
     }
   }
@@ -54,7 +54,7 @@ class ComponentBase extends Component {
       this.defaultState(),
       {
         contentStyle: {},
-        _async: { _boot: ASYNC_STRUCT },
+        _async: { default: ASYNC_STRUCT },
       },
       state,
     )
@@ -79,9 +79,9 @@ class ComponentBase extends Component {
     this.setState({ _async })
     console.log(`Call ${name}`, cb)
 
-    return cb()
-      .then(response => {
-        console.log('response')
+    return new Promise(async resolve => {
+      try {
+        const response = await cb()
         ;({ _async } = this.state)
         _async[name] = {
           isLoading: false,
@@ -89,9 +89,7 @@ class ComponentBase extends Component {
           response,
           error: null,
         }
-        this.setState({ _async })
-      })
-      .catch(error => {
+      } catch (error) {
         console.error(`Error on async '${name}':`, error.message)
         ;({ _async } = this.state)
         _async[name] = {
@@ -100,8 +98,10 @@ class ComponentBase extends Component {
           response: null,
           error,
         }
-        this.setState({ _async })
-      })
+      } finally {
+        this.setState({ _async }, () => resolve(_async[name]))
+      }
+    })
   }
 
   loadData() {
@@ -133,7 +133,7 @@ class ComponentBase extends Component {
   }
 
   renderError() {
-    const { error } = this.state
+    const { error } = this.async()
     return (
       <Message negative>
         <Message.Header>Error loading data</Message.Header>
@@ -164,7 +164,7 @@ class ComponentBase extends Component {
   handleContextRef = contextRef => this.setState({ contextRef })
 
   render() {
-    const { isLoading, isLoaded, error, response } = this.async('_boot')
+    const { isLoading, isLoaded, error, response } = this.async()
 
     const { contentStyle, contextRef } = this.state
     const header = this.renderHeader()

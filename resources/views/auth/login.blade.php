@@ -10,6 +10,9 @@
                 <div class="card-body">
                     <form method="POST" action="{{ route('login') }}" aria-label="{{ __('Login') }}">
                         @csrf
+                        @if(request()->input('r'))
+                        <input type="hidden" name="r" value="{{request()->input('r')}}"/>
+                        @endif
 
                         <div class="form-group row">
                             <label for="email" class="col-sm-4 col-form-label text-md-right">{{ __('E-Mail Address') }}</label>

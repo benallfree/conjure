@@ -1,22 +1,27 @@
 import React, { Component } from 'react'
 import _ from 'lodash'
-import { Table, Dropdown, Input, Button, Message } from 'semantic-ui-react'
-import { ComponentBase, AsyncIndicator } from './index'
+import {
+  Table,
+  Dropdown,
+  Input,
+  Button,
+  Message,
+  Checkbox,
+} from 'semantic-ui-react'
 
 class Form extends Component {
   constructor(props) {
     super(props)
     const input = {}
     _.each(props.fields, f => {
-      input[f.name] = f.defaultValue || ''
+      input[f.name] = f.defaultValue === null ? '' : f.defaultValue
     })
     this.state = { input }
   }
 
-  updateInput = field => (e, d) => {
+  updateInput = (field, valueField = 'value') => (e, d) => {
     const { input } = this.state
-    const { value } = d
-    input[field] = value
+    input[field] = d[valueField]
     this.setState({ input })
   }
 
@@ -41,6 +46,7 @@ class Form extends Component {
 
   render() {
     const { input } = this.state
+    console.log('input', input)
     const { asyncState, fields } = this.props
     const rows = _.map(fields, (f, i) => {
       const { type, name, label, placeholder, options, content } = f
@@ -70,8 +76,21 @@ class Form extends Component {
             />
           )
           break
-        default:
+        case 'Toggle':
+          control = (
+            <Checkbox
+              toggle
+              defaultChecked={input[name] === true}
+              onChange={this.updateInput(name, 'checked')}
+            />
+          )
+          break
+        case 'Div':
           control = <div>{content}</div>
+          break
+        default:
+          control = <div>Type {type} invalid</div>
+          break
       }
       return (
         <Table.Row key={i}>

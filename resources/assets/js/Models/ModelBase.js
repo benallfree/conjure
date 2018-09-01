@@ -5,17 +5,28 @@ export class ModelBase {
   static SAFETY_LIMIT = 1000
 
   constructor(item) {
-    _.each(item, (v, k) => {
-      let final = _.clone(v)
-      const mutators = {
-        created_at: moment,
-        updated_at: moment,
-      }
-      if (mutators[k]) {
-        final = mutators[k](v)
-      }
-      this[k] = final
+    _.each(this.constructor.transform(item), (v, k) => {
+      this[k] = v
     })
+  }
+
+  static getMutators() {
+    return {
+      created_at: moment,
+      updated_at: moment,
+    }
+  }
+
+  static transform(item) {
+    const final = _.clone(item)
+    _.each(item, (v, k) => {
+      if (this.getMutators()[k]) {
+        final[k] = this.getMutators()[k](v)
+      } else if (typeof v === 'object') {
+        final[k] = this.transform(v)
+      }
+    })
+    return final
   }
 
   static create(items) {

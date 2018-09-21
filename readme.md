@@ -16,6 +16,7 @@ Out of the box, Conjure has:
 - Laravel worker queues (Beanstalk)
 - VSCode PHP formatting
 - Superior serialization strategies
+- Mad asset cache-busting
 
 ## Quickstart
 

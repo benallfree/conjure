@@ -74,6 +74,14 @@ module.exports = {
     'no-console': 0,
     indent: 0,
   },
+  globals: {
+    global: true,
+    Log: true,
+    require: true,
+    Api: true,
+    Env: true,
+    route: true,
+  },
   settings: {
     'import/resolver': {
       webpack: {

@@ -112,8 +112,10 @@ class ModelBase extends Model
     $context['name'] = $name;
     $key = $this->cacheKeyFor($this->id, $context);
     if (!array_key_exists($key, $this->keyCache)) {
+      $tags = $this->cacheTagsFor($this->id, $context);
+
       extract($this->computed[$name]);
-      $serialized = \Cache::rememberForever($key, function () use ($serialize, $context) {
+      $serialized = \Cache::tags($tags)->rememberForever($key, function () use ($serialize, $context) {
         $serialized = $serialize($context);
         return $serialized;
       });
@@ -136,6 +138,29 @@ class ModelBase extends Model
     }
     $keys['__id'] = $id;
     $keys['__class'] = get_called_class();
+    $key = self::keyify($keys);
+    return $key;
+  }
+
+  public function cacheTagsFor($id, $keys)
+  {
+    if (!is_array($keys)) {
+      $keys = ['name' => $keys];
+    }
+    $keys['__id'] = $id;
+    $keys['__class'] = get_called_class();
+    ksort($keys);
+    $combos = self::uniqueCombination(array_keys($keys));
+    $tags = [];
+    foreach ($combos as $combo) {
+      $key_combo = array_intersect_key($keys, array_flip($combo));
+      $tags[] = self::keyify($key_combo);
+    }
+    return $tags;
+  }
+
+  public static function keyify($keys)
+  {
     ksort($keys);
     $joined = [];
     foreach ($keys as $k => $v) {
@@ -145,11 +170,38 @@ class ModelBase extends Model
     return $key;
   }
 
+  public function uniqueCombination($in, $minLength = 1, $max = 2000)
+  {
+    $count = count($in);
+    $members = pow(2, $count);
+    $return = array();
+    for ($i = 0; $i < $members; $i++) {
+      $b = sprintf("%0" . $count . "b", $i);
+      $out = array();
+      for ($j = 0; $j < $count; $j++) {
+        $b{$j} == '1' and $out[] = $in[$j];
+      }
+
+      count($out) >= $minLength && count($out) <= $max and $return[] = $out;
+    }
+    return $return;
+  }
+
   public static function forgetCacheKeyFor($id, $name)
   {
     $key = self::cacheKeyFor($id, $name);
     self::atomic($key, function () use ($key) {
       \Cache::forget($key);
+    });
+  }
+
+  public static function forgetCacheKeysByTag($key)
+  {
+    if (is_array($key)) {
+      $key = self::keyify($key);
+    }
+    self::atomic($key, function () use ($key) {
+      \Cache::tags($key)->flush();
     });
   }
 

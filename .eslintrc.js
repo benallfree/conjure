@@ -38,6 +38,7 @@ module.exports = {
     'react/prop-types': 0,
     'no-console': 0,
     'import/prefer-default-export': 0,
+    'no-shadow': 1,
     indent: [
       2,
       2,

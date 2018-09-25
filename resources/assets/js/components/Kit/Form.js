@@ -13,7 +13,9 @@ class Form extends Component {
   constructor(props) {
     super(props)
     const input = {}
-    _.each(props.fields, f => {
+    const { fieldsBuilder, context } = this.props
+    const fields = fieldsBuilder({}, context)
+    _.each(fields, f => {
       input[f.name] = f.defaultValue === null ? '' : f.defaultValue
     })
     this.state = { input }
@@ -46,8 +48,8 @@ class Form extends Component {
 
   render() {
     const { input } = this.state
-    console.log('input', input)
-    const { asyncState, fields } = this.props
+    const { asyncState, fieldsBuilder, context } = this.props
+    const fields = fieldsBuilder(input, context)
     const rows = _.map(fields, (f, i) => {
       const { type, name, label, placeholder, options, content } = f
       let control = null

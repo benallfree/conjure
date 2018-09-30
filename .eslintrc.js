@@ -82,6 +82,7 @@ module.exports = {
     Api: true,
     Env: true,
     route: true,
+    axios: true,
   },
   settings: {
     'import/resolver': {

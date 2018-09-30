@@ -28,6 +28,10 @@ class ApiBase {
       }
       return apiResponse.data
     } catch (e) {
+      console.log('typeof', e, e instanceof BusinessRuleError)
+      if (e instanceof BusinessRuleError) {
+        throw e
+      }
       if (
         e.response &&
         e.response.status === 401 &&

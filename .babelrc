@@ -2,6 +2,12 @@
   "plugins": [
     "transform-decorators-legacy",
     "transform-class-properties",
-    "react-hot-loader/babel"
+    "react-hot-loader/babel",
+    [
+      "babel-plugin-transform-builtin-extend",
+      {
+        "globals": ["Error", "Array"]
+      }
+    ]
   ]
 }

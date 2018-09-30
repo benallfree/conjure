@@ -42,9 +42,12 @@ class ApiBase {
           'Unauthenticated and no onNeedsAuthentication handler defined.',
         )
       }
-      const msg = `API ERROR: ${e}`
+      let msg = e.toString()
+      if (e.response && e.response.data && e.response.data.message) {
+        msg = e.response.data.message
+      }
       console.error(msg)
-      throw e
+      throw new ApiError(`API ERROR: ${msg}`)
     }
   }
 

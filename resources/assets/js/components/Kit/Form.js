@@ -13,12 +13,39 @@ class Form extends Component {
   constructor(props) {
     super(props)
     const input = {}
-    const { fieldsBuilder, context } = this.props
-    const fields = fieldsBuilder({}, context)
-    _.each(fields, f => {
-      input[f.name] = f.defaultValue === null ? '' : f.defaultValue
+    const { context } = this.props
+
+    this.fields = this.buildFields()
+    _.each(this.fields, (f, fieldName) => {
+      input[fieldName] = f.defaultValue(context) || ''
     })
     this.state = { input }
+  }
+
+  buildFields() {
+    const defaults = {
+      type: (form, context) => 'Text',
+      placeholder: (form, context) => 'Placeholder',
+      label: (form, context) => 'Label',
+      options: (form, context) => [],
+      content: (form, context) => <div>Content</div>,
+      displayIf: (form, context) => true,
+      defaultValue: context => 'Sample field',
+    }
+    const { fields } = this.props
+    const ret = {}
+    _.each(fields, (f, fieldName) => {
+      ret[fieldName] = {}
+      _.each(defaults, (v, k) => {
+        let final = f[k]
+        if (typeof final === 'undefined') final = v
+        ret[fieldName][k] = final
+        if (typeof final !== 'function')
+          ret[fieldName][k] = (form, context) => final
+      })
+    })
+
+    return ret
   }
 
   updateInput = (field, valueField = 'value') => (e, d) => {
@@ -48,17 +75,17 @@ class Form extends Component {
 
   render() {
     const { input } = this.state
-    const { asyncState, fieldsBuilder, context } = this.props
-    const fields = fieldsBuilder(input, context)
-    const rows = _.map(fields, (f, i) => {
-      const { type, name, label, placeholder, options, content } = f
+    const { asyncState, context } = this.props
+
+    const rows = _.map(this.fields, (f, name) => {
+      const { type, label, placeholder, options, content, displayIf } = f
       let control = null
-      switch (type) {
+      switch (type(input, context)) {
         case 'Text':
           control = (
             <Input
               error={this.hasFieldError(name)}
-              placeholder={placeholder}
+              placeholder={placeholder(input, context)}
               value={input[name]}
               style={{ width: '100%' }}
               onChange={this.updateInput(name)}
@@ -71,7 +98,7 @@ class Form extends Component {
               error={this.hasFieldError(name)}
               fluid
               selection
-              options={options}
+              options={options(input, context)}
               defaultValue={input[name]}
               onChange={this.updateInput(name)}
               style={{ width: '100%' }}
@@ -82,28 +109,32 @@ class Form extends Component {
           control = (
             <Checkbox
               toggle
-              defaultChecked={input[name] === true}
+              defaultChecked={!!input[name] === true}
               onChange={this.updateInput(name, 'checked')}
             />
           )
           break
         case 'Div':
-          control = <div>{content}</div>
+          control = content(input, context)
           break
         default:
           control = <div>Type {type} invalid</div>
           break
       }
       return (
-        <Table.Row key={i}>
-          <Table.Cell collapsing>{label}</Table.Cell>
-          <Table.Cell>
-            {control}
-            {this.hasFieldError(name) && (
-              <div style={{ color: 'red' }}>{this.fieldErrorMessage(name)}</div>
-            )}
-          </Table.Cell>
-        </Table.Row>
+        displayIf(input, context) && (
+          <Table.Row key={name}>
+            <Table.Cell collapsing>{label(input, context)}</Table.Cell>
+            <Table.Cell>
+              {control}
+              {this.hasFieldError(name) && (
+                <div style={{ color: 'red' }}>
+                  {this.fieldErrorMessage(name)}
+                </div>
+              )}
+            </Table.Cell>
+          </Table.Row>
+        )
       )
     })
     return (

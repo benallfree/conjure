@@ -7,6 +7,7 @@ import {
   Button,
   Message,
   Checkbox,
+  Header,
 } from 'semantic-ui-react'
 
 class Form extends Component {
@@ -77,10 +78,27 @@ class Form extends Component {
     const { input } = this.state
     const { asyncState, context } = this.props
 
+    const save = (
+      <Table.Row>
+        <Table.Cell />
+        <Table.Cell style={{ textAlign: 'right' }}>
+          <Button
+            loading={asyncState.isLoading}
+            disabled={asyncState.isLoading}
+            primary
+            onClick={this.handleSave}
+          >
+            Save
+          </Button>
+        </Table.Cell>
+      </Table.Row>
+    )
+
     const rows = _.map(this.fields, (f, name) => {
       const { type, label, placeholder, options, content, displayIf } = f
       let control = null
-      switch (type(input, context)) {
+      const resolvedType = type(input, context)
+      switch (resolvedType) {
         case 'Text':
           control = (
             <Input
@@ -114,6 +132,9 @@ class Form extends Component {
             />
           )
           break
+        case 'Section':
+          control = <Header h={3}>{label(input, context)}</Header>
+          break
         case 'Div':
           control = content(input, context)
           break
@@ -121,22 +142,33 @@ class Form extends Component {
           control = <div>Type {type} invalid</div>
           break
       }
-      return (
-        displayIf(input, context) && (
-          <Table.Row key={name}>
-            <Table.Cell collapsing>{label(input, context)}</Table.Cell>
-            <Table.Cell>
-              {control}
-              {this.hasFieldError(name) && (
-                <div style={{ color: 'red' }}>
-                  {this.fieldErrorMessage(name)}
-                </div>
-              )}
-            </Table.Cell>
-          </Table.Row>
-        )
-      )
+      if (!displayIf(input, context)) return null
+      switch (resolvedType) {
+        case 'Section':
+          return (
+            <Table.Row key={name}>
+              <Table.Cell style={{ backgroundColor: 'initial' }} colSpan={2}>
+                <div style={{ marginTop: 20 }}>{control}</div>
+              </Table.Cell>
+            </Table.Row>
+          )
+        default:
+          return (
+            <Table.Row key={name}>
+              <Table.Cell collapsing>{label(input, context)}</Table.Cell>
+              <Table.Cell>
+                {control}
+                {this.hasFieldError(name) && (
+                  <div style={{ color: 'red' }}>
+                    {this.fieldErrorMessage(name)}
+                  </div>
+                )}
+              </Table.Cell>
+            </Table.Row>
+          )
+      }
     })
+
     return (
       <div>
         {asyncState.isLoaded && <Message success>Saved</Message>}
@@ -149,20 +181,7 @@ class Form extends Component {
         <Table definition>
           <Table.Body>
             {rows}
-
-            <Table.Row>
-              <Table.Cell />
-              <Table.Cell style={{ textAlign: 'right' }}>
-                <Button
-                  loading={asyncState.isLoading}
-                  disabled={asyncState.isLoading}
-                  primary
-                  onClick={this.handleSave}
-                >
-                  Save
-                </Button>
-              </Table.Cell>
-            </Table.Row>
+            {save}
           </Table.Body>
         </Table>
       </div>

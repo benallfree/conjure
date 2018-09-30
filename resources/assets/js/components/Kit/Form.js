@@ -9,6 +9,7 @@ import {
   Checkbox,
   Header,
 } from 'semantic-ui-react'
+import changeCase from 'change-case'
 
 class Form extends Component {
   constructor(props) {
@@ -18,20 +19,23 @@ class Form extends Component {
 
     this.fields = this.buildFields()
     _.each(this.fields, (f, fieldName) => {
-      input[fieldName] = f.defaultValue(context) || ''
+      const v = f.defaultValue(context, fieldName)
+      input[fieldName] = v === null ? '' : `${v}`
     })
     this.state = { input }
   }
 
   buildFields() {
     const defaults = {
-      type: (form, context) => 'Text',
-      placeholder: (form, context) => 'Placeholder',
-      label: (form, context) => 'Label',
-      options: (form, context) => [],
-      content: (form, context) => <div>Content</div>,
-      displayIf: (form, context) => true,
-      defaultValue: context => 'Sample field',
+      type: (form, context, fieldName) => 'Text',
+      placeholder: (form, context, fieldName) => changeCase.title(fieldName),
+      label: (form, context, fieldName) => changeCase.title(fieldName),
+      options: (form, context, fieldName) => [],
+      content: (form, context, fieldName) => (
+        <div>{changeCase.title(fieldName)} content</div>
+      ),
+      displayIf: (form, context, fieldName) => true,
+      defaultValue: (context, fieldName) => changeCase.title(fieldName),
     }
     const { fields } = this.props
     const ret = {}
@@ -42,7 +46,7 @@ class Form extends Component {
         if (typeof final === 'undefined') final = v
         ret[fieldName][k] = final
         if (typeof final !== 'function')
-          ret[fieldName][k] = (form, context) => final
+          ret[fieldName][k] = (form, context, fieldName) => final
       })
     })
 
@@ -103,7 +107,7 @@ class Form extends Component {
           control = (
             <Input
               error={this.hasFieldError(name)}
-              placeholder={placeholder(input, context)}
+              placeholder={placeholder(input, context, name)}
               value={input[name]}
               style={{ width: '100%' }}
               onChange={this.updateInput(name)}
@@ -116,7 +120,7 @@ class Form extends Component {
               error={this.hasFieldError(name)}
               fluid
               selection
-              options={options(input, context)}
+              options={options(input, context, name)}
               defaultValue={input[name]}
               onChange={this.updateInput(name)}
               style={{ width: '100%' }}
@@ -133,10 +137,10 @@ class Form extends Component {
           )
           break
         case 'Section':
-          control = <Header h={3}>{label(input, context)}</Header>
+          control = <Header h={3}>{label(input, context, name)}</Header>
           break
         case 'Div':
-          control = content(input, context)
+          control = content(input, context, name)
           break
         default:
           control = <div>Type {type} invalid</div>
@@ -155,7 +159,7 @@ class Form extends Component {
         default:
           return (
             <Table.Row key={name}>
-              <Table.Cell collapsing>{label(input, context)}</Table.Cell>
+              <Table.Cell collapsing>{label(input, context, name)}</Table.Cell>
               <Table.Cell>
                 {control}
                 {this.hasFieldError(name) && (

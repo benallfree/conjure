@@ -143,7 +143,6 @@ class ComponentBase extends Component {
   }
 
   renderHeader() {
-    console.log('state', this.state)
     const { title } = this.state
     if (!title) return null
     return (

@@ -12,9 +12,9 @@ class ApiBase {
 
   async axios(config) {
     try {
-      console.log('API', config)
+      console.log('API Request', config)
       const response = await axios(config)
-      console.log('api success', response)
+      console.log('API Response', response)
       const apiResponse = response.data
 
       if (!apiResponse.status)
@@ -28,7 +28,6 @@ class ApiBase {
       }
       return apiResponse.data
     } catch (e) {
-      console.log('typeof', e, e instanceof BusinessRuleError)
       if (e instanceof BusinessRuleError) {
         throw e
       }

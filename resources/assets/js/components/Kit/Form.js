@@ -8,8 +8,11 @@ import {
   Message,
   Checkbox,
   Header,
+  Icon,
+  Label,
 } from 'semantic-ui-react'
 import changeCase from 'change-case'
+import { helpers } from 'rx'
 
 class Form extends Component {
   constructor(props) {
@@ -22,7 +25,7 @@ class Form extends Component {
       const v = f.defaultValue({ context, fieldName })
       input[fieldName] = v === null ? '' : v
     })
-    this.state = { input }
+    this.state = { input, helpState: {} }
   }
 
   buildFields() {
@@ -38,6 +41,7 @@ class Form extends Component {
       displayIf: ({ form, context, fieldName }) => true,
       defaultValue: ({ context, fieldName }) => changeCase.title(fieldName),
       inputLabel: ({ form, context, fieldName }) => '',
+      help: ({ form, context, fieldName }) => null,
     }
     const { fields } = this.props
     const ret = {}
@@ -80,8 +84,14 @@ class Form extends Component {
     onSave(input)
   }
 
+  handleHelp = name => {
+    const { helpState } = this.state
+    helpState[name] = !(helpState[name] || false)
+    this.setState({ helpState })
+  }
+
   render() {
-    const { input } = this.state
+    const { input, helpState } = this.state
     const { asyncState, context } = this.props
 
     const save = (
@@ -109,6 +119,7 @@ class Form extends Component {
         content,
         displayIf,
         inputLabel,
+        help,
       } = f
       let control = null
       const args = { form: input, context, fieldName: name }
@@ -176,9 +187,23 @@ class Form extends Component {
         default:
           return (
             <Table.Row key={name}>
-              <Table.Cell collapsing>{label(args)}</Table.Cell>
+              <Table.Cell collapsing>
+                {label(args)}{' '}
+                {help(args) && (
+                  <Icon
+                    circular
+                    link
+                    size="mini"
+                    name="help"
+                    inverted={helpState[name] || false}
+                    style={{ position: 'relative', top: -3 }}
+                    onClick={() => this.handleHelp(name)}
+                  />
+                )}
+              </Table.Cell>
               <Table.Cell>
                 {control}
+                {helpState[name] && <Label pointing>{help(args)}</Label>}
                 {this.hasFieldError(name) && (
                   <div style={{ color: 'red' }}>
                     {this.fieldErrorMessage(name)}

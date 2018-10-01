@@ -20,7 +20,7 @@ class Form extends Component {
     this.fields = this.buildFields()
     _.each(this.fields, (f, fieldName) => {
       const v = f.defaultValue(context, fieldName)
-      input[fieldName] = v === null ? '' : `${v}`
+      input[fieldName] = v === null ? '' : v
     })
     this.state = { input }
   }
@@ -131,7 +131,7 @@ class Form extends Component {
           control = (
             <Checkbox
               toggle
-              defaultChecked={!!input[name] === true}
+              defaultChecked={input[name]}
               onChange={this.updateInput(name, 'checked')}
             />
           )

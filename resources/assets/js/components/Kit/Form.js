@@ -19,7 +19,7 @@ class Form extends Component {
 
     this.fields = this.buildFields()
     _.each(this.fields, (f, fieldName) => {
-      const v = f.defaultValue(context, fieldName)
+      const v = f.defaultValue({ context, fieldName })
       input[fieldName] = v === null ? '' : v
     })
     this.state = { input }
@@ -27,15 +27,17 @@ class Form extends Component {
 
   buildFields() {
     const defaults = {
-      type: (form, context, fieldName) => 'Text',
-      placeholder: (form, context, fieldName) => changeCase.title(fieldName),
-      label: (form, context, fieldName) => changeCase.title(fieldName),
-      options: (form, context, fieldName) => [],
-      content: (form, context, fieldName) => (
+      type: ({ form, context, fieldName }) => 'Text',
+      placeholder: ({ form, context, fieldName }) =>
+        changeCase.title(fieldName),
+      label: ({ form, context, fieldName }) => changeCase.title(fieldName),
+      options: ({ form, context, fieldName }) => [],
+      content: ({ form, context, fieldName }) => (
         <div>{changeCase.title(fieldName)} content</div>
       ),
-      displayIf: (form, context, fieldName) => true,
-      defaultValue: (context, fieldName) => changeCase.title(fieldName),
+      displayIf: ({ form, context, fieldName }) => true,
+      defaultValue: ({ context, fieldName }) => changeCase.title(fieldName),
+      inputLabel: ({ form, context, fieldName }) => '',
     }
     const { fields } = this.props
     const ret = {}
@@ -46,7 +48,7 @@ class Form extends Component {
         if (typeof final === 'undefined') final = v
         ret[fieldName][k] = final
         if (typeof final !== 'function')
-          ret[fieldName][k] = (form, context, fieldName) => final
+          ret[fieldName][k] = ({ form, context, fieldName }) => final
       })
     })
 
@@ -99,18 +101,32 @@ class Form extends Component {
     )
 
     const rows = _.map(this.fields, (f, name) => {
-      const { type, label, placeholder, options, content, displayIf } = f
+      const {
+        type,
+        label,
+        placeholder,
+        options,
+        content,
+        displayIf,
+        inputLabel,
+      } = f
       let control = null
-      const resolvedType = type(input, context)
+      const args = { form: input, context, fieldName: name }
+      const resolvedType = type(args)
       switch (resolvedType) {
         case 'Text':
           control = (
             <Input
               error={this.hasFieldError(name)}
-              placeholder={placeholder(input, context, name)}
+              placeholder={placeholder({
+                form: input,
+                context,
+                fieldName: name,
+              })}
               value={input[name]}
               style={{ width: '100%' }}
               onChange={this.updateInput(name)}
+              label={inputLabel(args) || null}
             />
           )
           break
@@ -120,10 +136,11 @@ class Form extends Component {
               error={this.hasFieldError(name)}
               fluid
               selection
-              options={options(input, context, name)}
+              options={options(args)}
               defaultValue={input[name]}
               onChange={this.updateInput(name)}
               style={{ width: '100%' }}
+              label={inputLabel(args) || null}
             />
           )
           break
@@ -137,16 +154,16 @@ class Form extends Component {
           )
           break
         case 'Section':
-          control = <Header h={3}>{label(input, context, name)}</Header>
+          control = <Header h={3}>{label(args)}</Header>
           break
         case 'Div':
-          control = content(input, context, name)
+          control = content(args)
           break
         default:
           control = <div>Type {type} invalid</div>
           break
       }
-      if (!displayIf(input, context)) return null
+      if (!displayIf(args)) return null
       switch (resolvedType) {
         case 'Section':
           return (
@@ -159,7 +176,7 @@ class Form extends Component {
         default:
           return (
             <Table.Row key={name}>
-              <Table.Cell collapsing>{label(input, context, name)}</Table.Cell>
+              <Table.Cell collapsing>{label(args)}</Table.Cell>
               <Table.Cell>
                 {control}
                 {this.hasFieldError(name) && (

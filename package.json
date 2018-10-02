@@ -29,6 +29,7 @@
         "eslint-plugin-jsx-a11y": "^6.1.1",
         "eslint-plugin-prettier": "^2.6.2",
         "eslint-plugin-react": "^7.11.0",
+        "inputmask-core": "^2.2.0",
         "jquery": "^3.2",
         "laravel-mix": "^2.0",
         "lodash": "^4.17.4",

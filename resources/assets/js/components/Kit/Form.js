@@ -12,7 +12,7 @@ import {
   Label,
 } from 'semantic-ui-react'
 import changeCase from 'change-case'
-import { helpers } from 'rx'
+import InputMask from 'inputmask-core'
 
 class Form extends Component {
   constructor(props) {
@@ -30,18 +30,22 @@ class Form extends Component {
 
   buildFields() {
     const defaults = {
-      type: ({ form, context, fieldName }) => 'Text',
-      placeholder: ({ form, context, fieldName }) =>
+      type: ({ form, context, fieldName, value }) => 'Text',
+      placeholder: ({ form, context, fieldName, value }) =>
         changeCase.title(fieldName),
-      label: ({ form, context, fieldName }) => changeCase.title(fieldName),
-      options: ({ form, context, fieldName }) => [],
-      content: ({ form, context, fieldName }) => (
+      label: ({ form, context, fieldName, value }) =>
+        changeCase.title(fieldName),
+      options: ({ form, context, fieldName, value }) => [],
+      content: ({ form, context, fieldName, value }) => (
         <div>{changeCase.title(fieldName)} content</div>
       ),
-      displayIf: ({ form, context, fieldName }) => true,
+      displayIf: ({ form, context, fieldName, value }) => true,
       defaultValue: ({ context, fieldName }) => changeCase.title(fieldName),
-      inputLabel: ({ form, context, fieldName }) => '',
-      help: ({ form, context, fieldName }) => null,
+      inputLabel: ({ form, context, fieldName, value }) => '',
+      help: ({ form, context, fieldName, value }) => null,
+      inputFilter: ({ form, context, fieldName, value }) => true,
+      validate: ({ value }) => true,
+      mask: () => null,
     }
     const { fields } = this.props
     const ret = {}
@@ -52,21 +56,37 @@ class Form extends Component {
         if (typeof final === 'undefined') final = v
         ret[fieldName][k] = final
         if (typeof final !== 'function')
-          ret[fieldName][k] = ({ form, context, fieldName }) => final
+          ret[fieldName][k] = ({ form, context, fieldName, value }) => final
       })
     })
 
     return ret
   }
 
-  updateInput = (field, valueField = 'value') => (e, d) => {
+  updateInput = (args, valueField = 'value') => (e, d) => {
     const { input } = this.state
-    input[field] = d[valueField]
+    const { form, fieldName, context } = args
+    const value = d[valueField]
+    const field = this.fields[fieldName]
+    const pattern = field.mask({ form, fieldName, context, value })
+    const mask = pattern ? new InputMask({ pattern }) : null
+    const isMaskValid = mask ? mask.paste(value) : false
+
+    if (!field.inputFilter({ value })) return
+    if (pattern && !isMaskValid) return
+
+    input[fieldName] = value
     this.setState({ input })
   }
 
   hasFieldError = fieldName => {
-    return this.fieldErrorMessage(fieldName) !== null
+    const { input } = this.state
+    const value = input[fieldName]
+
+    return (
+      !this.fields[fieldName].validate({ value }) ||
+      this.fieldErrorMessage(fieldName) !== null
+    )
   }
 
   fieldErrorMessage = fieldName => {
@@ -93,15 +113,20 @@ class Form extends Component {
   render() {
     const { input, helpState } = this.state
     const { asyncState, context } = this.props
-
+    const allValid = _.reduce(
+      this.fields,
+      (result, value, key) => result && value.validate({ value: input[key] }),
+      true,
+    )
     const save = (
       <Table.Row>
         <Table.Cell />
         <Table.Cell style={{ textAlign: 'right' }}>
           <Button
             loading={asyncState.isLoading}
-            disabled={asyncState.isLoading}
+            disabled={!allValid || asyncState.isLoading}
             primary
+            negative={!allValid}
             onClick={this.handleSave}
           >
             Save
@@ -122,7 +147,7 @@ class Form extends Component {
         help,
       } = f
       let control = null
-      const args = { form: input, context, fieldName: name }
+      const args = { form: input, context, fieldName: name, value: input[name] }
       const resolvedType = type(args)
       switch (resolvedType) {
         case 'Text':
@@ -136,7 +161,7 @@ class Form extends Component {
               })}
               value={input[name]}
               style={{ width: '100%' }}
-              onChange={this.updateInput(name)}
+              onChange={this.updateInput(args)}
               label={inputLabel(args) || null}
             />
           )
@@ -149,7 +174,7 @@ class Form extends Component {
               selection
               options={options(args)}
               defaultValue={input[name]}
-              onChange={this.updateInput(name)}
+              onChange={this.updateInput(args)}
               style={{ width: '100%' }}
               label={inputLabel(args) || null}
             />
@@ -160,7 +185,7 @@ class Form extends Component {
             <Checkbox
               toggle
               defaultChecked={input[name]}
-              onChange={this.updateInput(name, 'checked')}
+              onChange={this.updateInput(args, 'checked')}
             />
           )
           break

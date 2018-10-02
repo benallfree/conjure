@@ -79,12 +79,11 @@ class Form extends Component {
     this.setState({ input })
   }
 
-  hasFieldError = fieldName => {
-    const { input } = this.state
-    const value = input[fieldName]
+  hasFieldError = args => {
+    const { fieldName } = args
 
     return (
-      !this.fields[fieldName].validate({ value }) ||
+      !this.fields[fieldName].validate(args) ||
       this.fieldErrorMessage(fieldName) !== null
     )
   }
@@ -115,7 +114,14 @@ class Form extends Component {
     const { asyncState, context } = this.props
     const allValid = _.reduce(
       this.fields,
-      (result, value, key) => result && value.validate({ value: input[key] }),
+      (result, value, key) =>
+        result &&
+        value.validate({
+          form: input,
+          context,
+          fieldName: key,
+          value: input[key],
+        }),
       true,
     )
     const save = (
@@ -153,7 +159,7 @@ class Form extends Component {
         case 'Text':
           control = (
             <Input
-              error={this.hasFieldError(name)}
+              error={this.hasFieldError(args)}
               placeholder={placeholder({
                 form: input,
                 context,
@@ -169,7 +175,7 @@ class Form extends Component {
         case 'Dropdown':
           control = (
             <Dropdown
-              error={this.hasFieldError(name)}
+              error={this.hasFieldError(args)}
               fluid
               selection
               options={options(args)}
@@ -229,7 +235,7 @@ class Form extends Component {
               <Table.Cell>
                 {control}
                 {helpState[name] && <Label pointing>{help(args)}</Label>}
-                {this.hasFieldError(name) && (
+                {this.hasFieldError(args) && (
                   <div style={{ color: 'red' }}>
                     {this.fieldErrorMessage(name)}
                   </div>

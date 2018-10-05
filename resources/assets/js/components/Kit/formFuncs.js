@@ -40,7 +40,7 @@ function floatField(opts = {}) {
   const min = opts.min || 0.0
   const max = opts.max || 0.0
   const precision = opts.precision || 2
-  const left = '0'.repeat(`${max}`.length)
+  const left = '0'.repeat(`${Math.max(1, max)}`.length)
   const right = '0'.repeat(precision)
   const mask = `${left}.${right}`
   return {
@@ -66,8 +66,8 @@ function currencyField(opts = {}) {
 
 function rateField(opts = {}) {
   return currencyField({
-    min: 0,
-    max: 5,
+    min: 0.0,
+    max: 0.05,
     precision: 4,
     ...opts,
   })
@@ -133,6 +133,7 @@ function createMask(s) {
 }
 
 export {
+  textField,
   divField,
   dropdownField,
   sectionField,

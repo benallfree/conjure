@@ -107,7 +107,6 @@ class Form extends Component {
               value === undefined ||
               value === null ||
               (typeof value === 'string' && value.trim().length === 0)
-            console.log('validate', { args, isEmpty, isValid })
             const isValid = (!isRequired && isEmpty) || handler(args)
             return isValid
           }

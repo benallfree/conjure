@@ -110,6 +110,20 @@ class Form extends Component {
             const isValid = (!isRequired && isEmpty) || handler(args)
             return isValid
           }
+        case 'defaultValue':
+          return args => {
+            const { fieldInfo } = args
+            const { format, defaultValue } = fieldInfo
+            let value = handler(args)
+            const isEmpty =
+              value === undefined ||
+              value === null ||
+              (typeof value === 'string' && value.trim().length === 0)
+            if (!isEmpty) {
+              value = format({ ...args, value })
+            }
+            return value
+          }
         default:
       }
       return handler

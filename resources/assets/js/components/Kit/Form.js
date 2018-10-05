@@ -12,51 +12,99 @@ import {
   Label,
 } from 'semantic-ui-react'
 import changeCase from 'change-case'
-import InputMask from 'inputmask-core'
+import MaskedInput from 'react-text-mask'
+import { createMask } from './formFuncs'
 
 class Form extends Component {
   constructor(props) {
     super(props)
     const input = {}
     const { context } = this.props
-
+    let allValid = true
     this.fields = this.buildFields()
-    _.each(this.fields, (f, fieldName) => {
-      const v = f.defaultValue({ context, fieldName })
-      input[fieldName] = v === null ? '' : v
+    _.each(this.fields, fieldInfo => {
+      const { name, defaultValue, validate, format } = fieldInfo
+      let v = defaultValue({ context, fieldInfo })
+      allValid = allValid && validate({ context, fieldInfo, value: v })
+      if (allValid) {
+        v = format({ context, fieldInfo, value: v })
+      }
+      input[name] = v === null ? '' : v
     })
-    this.state = { input, helpState: {} }
+    this.state = {
+      input,
+      helpState: {},
+      allValid,
+      validState: _.reduce(
+        this.fields,
+        (res, value, key) => {
+          res[key] = true
+          return res
+        },
+        {},
+      ),
+    }
   }
 
   buildFields() {
     const defaults = {
-      type: ({ form, context, fieldName, value }) => 'Text',
-      placeholder: ({ form, context, fieldName, value }) =>
-        changeCase.title(fieldName),
-      label: ({ form, context, fieldName, value }) =>
-        changeCase.title(fieldName),
-      options: ({ form, context, fieldName, value }) => [],
-      content: ({ form, context, fieldName, value }) => (
-        <div>{changeCase.title(fieldName)} content</div>
+      required: false,
+      type: () => 'Text',
+      placeholder: ({ fieldInfo }) => changeCase.title(fieldInfo.name),
+      label: ({ fieldInfo }) => changeCase.title(fieldInfo.name),
+      options: () => [],
+      content: ({ fieldInfo }) => (
+        <div>{changeCase.title(fieldInfo)} content</div>
       ),
-      displayIf: ({ form, context, fieldName, value }) => true,
-      defaultValue: ({ context, fieldName }) => changeCase.title(fieldName),
-      inputLabel: ({ form, context, fieldName, value }) => '',
-      help: ({ form, context, fieldName, value }) => null,
-      inputFilter: ({ form, context, fieldName, value }) => true,
-      validate: ({ value }) => true,
-      mask: () => null,
+      displayIf: () => true,
+      defaultValue: ({ fieldInfo }) => changeCase.title(fieldInfo.name),
+      inputLabel: () => '',
+      help: () => null,
+      validate: () => true,
+      mask: () => false,
+      unmask: ({ value }) => value,
+      inputFormat: ({ value }) => value,
+      format: ({ value }) => value,
+      input: ({ value }) => value,
     }
+
+    function createHandler({ handlerName, fieldHandler, defaultHandler }) {
+      let val = fieldHandler
+      if (val === undefined) val = defaultHandler
+      if (typeof val === 'function') return val
+      switch (handlerName) {
+        case 'mask':
+          if (typeof val === 'string') {
+            val = createMask(val)
+            return () => val
+          }
+          break
+        case 'unmask':
+          if (val instanceof RegExp) {
+            return ({ value }) => value.replace(val, '')
+          }
+          break
+        case 'validate':
+          if (val instanceof RegExp) {
+            return ({ value }) => (value ? value.match(val) !== null : true)
+          }
+          break
+        default:
+          break
+      }
+      return () => val
+    }
+
     const { fields } = this.props
     const ret = {}
     _.each(fields, (f, fieldName) => {
-      ret[fieldName] = {}
+      ret[fieldName] = { name: fieldName }
       _.each(defaults, (v, k) => {
-        let final = f[k]
-        if (typeof final === 'undefined') final = v
-        ret[fieldName][k] = final
-        if (typeof final !== 'function')
-          ret[fieldName][k] = ({ form, context, fieldName, value }) => final
+        ret[fieldName][k] = createHandler({
+          handlerName: k,
+          fieldHandler: f[k],
+          defaultHandler: v,
+        })
       })
     })
 
@@ -64,28 +112,51 @@ class Form extends Component {
   }
 
   updateInput = (args, valueField = 'value') => (e, d) => {
+    console.log({ args, valueField, e, d })
     const { input } = this.state
-    const { form, fieldName, context } = args
-    const value = d[valueField]
-    const field = this.fields[fieldName]
-    const pattern = field.mask({ form, fieldName, context, value })
-    const mask = pattern ? new InputMask({ pattern }) : null
-    const isMaskValid = mask ? mask.paste(value) : false
-
-    if (!field.inputFilter({ value })) return
-    if (pattern && !isMaskValid) return
-
-    input[fieldName] = value
+    const { fieldInfo } = args
+    const { name, unmask } = fieldInfo
+    const { value: maskedValue, ...rest } = args
+    const value = unmask({ ...rest, value: d[valueField] })
+    console.log({ previuous: args.value, current: value, raw: d[valueField] })
+    input[fieldInfo.name] = value
     this.setState({ input })
   }
 
-  hasFieldError = args => {
-    const { fieldName } = args
+  onBlur = args => e => {
+    if (this.validate(args)) {
+      const { fieldInfo } = args
+      const { format } = fieldInfo
+      const { input } = this.state
+      input[fieldInfo.name] = format(args)
+      this.setState({ input })
+    }
+  }
 
-    return (
-      !this.fields[fieldName].validate(args) ||
-      this.fieldErrorMessage(fieldName) !== null
+  validate = args => {
+    const { validState } = this.state
+    const { fieldInfo, value } = args
+    const { name, validate, required } = fieldInfo
+    const isRequired = required(args)
+    const isEmpty =
+      value === undefined ||
+      (typeof value === 'string' && value.trim.length === 0)
+    validState[name] = (!isRequired && isEmpty) || validate(args)
+    const allValid = _.reduce(
+      validState,
+      (result, value, key) => result && value,
+      true,
     )
+    this.setState({ allValid, validState })
+    return validState[name]
+  }
+
+  hasFieldError = args => {
+    const { validState } = this.state
+    const { fieldInfo } = args
+    const { name } = fieldInfo
+
+    return !validState[name] || this.fieldErrorMessage(fieldInfo.name) !== null
   }
 
   fieldErrorMessage = fieldName => {
@@ -110,20 +181,9 @@ class Form extends Component {
   }
 
   render() {
-    const { input, helpState } = this.state
+    const { input, helpState, allValid } = this.state
     const { asyncState, context } = this.props
-    const allValid = _.reduce(
-      this.fields,
-      (result, value, key) =>
-        result &&
-        value.validate({
-          form: input,
-          context,
-          fieldName: key,
-          value: input[key],
-        }),
-      true,
-    )
+
     const save = (
       <Table.Row>
         <Table.Cell />
@@ -151,24 +211,30 @@ class Form extends Component {
         displayIf,
         inputLabel,
         help,
+        mask,
       } = f
       let control = null
-      const args = { form: input, context, fieldName: name, value: input[name] }
+      const args = { form: input, context, fieldInfo: f, value: input[name] }
       const resolvedType = type(args)
       switch (resolvedType) {
         case 'Text':
           control = (
             <Input
               error={this.hasFieldError(args)}
-              placeholder={placeholder({
-                form: input,
-                context,
-                fieldName: name,
-              })}
-              value={input[name]}
-              style={{ width: '100%' }}
-              onChange={this.updateInput(args)}
               label={inputLabel(args) || null}
+              style={{ width: '100%' }}
+              onBlur={this.onBlur(args)}
+              input={
+                <MaskedInput
+                  mask={mask(args)}
+                  value={input[name]}
+                  placeholder={placeholder(args)}
+                  showMask={mask(args) !== false}
+                  onChange={event =>
+                    this.updateInput(args)(event, { value: event.target.value })
+                  }
+                />
+              }
             />
           )
           break
@@ -183,6 +249,7 @@ class Form extends Component {
               onChange={this.updateInput(args)}
               style={{ width: '100%' }}
               label={inputLabel(args) || null}
+              onBlur={this.onBlur(args)}
             />
           )
           break
@@ -192,6 +259,7 @@ class Form extends Component {
               toggle
               defaultChecked={input[name]}
               onChange={this.updateInput(args, 'checked')}
+              onBlur={this.onBlur(args)}
             />
           )
           break
@@ -266,4 +334,5 @@ class Form extends Component {
   }
 }
 
+export * from './formFuncs'
 export { Form }

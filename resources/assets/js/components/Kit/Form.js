@@ -69,30 +69,51 @@ class Form extends Component {
     }
 
     function createHandler({ handlerName, fieldHandler, defaultHandler }) {
-      let val = fieldHandler
-      if (val === undefined) val = defaultHandler
-      if (typeof val === 'function') return val
-      switch (handlerName) {
-        case 'mask':
-          if (typeof val === 'string') {
-            val = createMask(val)
-            return () => val
-          }
-          break
-        case 'unmask':
-          if (val instanceof RegExp) {
-            return ({ value }) => value.replace(val, '')
-          }
-          break
-        case 'validate':
-          if (val instanceof RegExp) {
-            return ({ value }) => (value ? value.match(val) !== null : true)
-          }
-          break
-        default:
-          break
+      function create() {
+        let val = fieldHandler
+        if (val === undefined) val = defaultHandler
+        if (typeof val === 'function') return val
+        switch (handlerName) {
+          case 'mask':
+            if (typeof val === 'string') {
+              val = createMask(val)
+              return () => val
+            }
+            break
+          case 'unmask':
+            if (val instanceof RegExp) {
+              return ({ value }) => value.replace(val, '')
+            }
+            break
+          case 'validate':
+            if (val instanceof RegExp) {
+              return ({ value }) => (value ? value.match(val) !== null : true)
+            }
+            break
+          default:
+            break
+        }
+        return () => val
       }
-      return () => val
+
+      const handler = create()
+      switch (handlerName) {
+        case 'validate':
+          return args => {
+            const { fieldInfo, value } = args
+            const { required } = fieldInfo
+            const isRequired = required(args)
+            const isEmpty =
+              value === undefined ||
+              value === null ||
+              (typeof value === 'string' && value.trim().length === 0)
+            console.log('validate', { args, isEmpty, isValid })
+            const isValid = (!isRequired && isEmpty) || handler(args)
+            return isValid
+          }
+        default:
+      }
+      return handler
     }
 
     const { fields } = this.props
@@ -112,13 +133,11 @@ class Form extends Component {
   }
 
   updateInput = (args, valueField = 'value') => (e, d) => {
-    console.log({ args, valueField, e, d })
     const { input } = this.state
     const { fieldInfo } = args
     const { name, unmask } = fieldInfo
     const { value: maskedValue, ...rest } = args
     const value = unmask({ ...rest, value: d[valueField] })
-    console.log({ previuous: args.value, current: value, raw: d[valueField] })
     input[fieldInfo.name] = value
     this.setState({ input })
   }
@@ -135,13 +154,9 @@ class Form extends Component {
 
   validate = args => {
     const { validState } = this.state
-    const { fieldInfo, value } = args
-    const { name, validate, required } = fieldInfo
-    const isRequired = required(args)
-    const isEmpty =
-      value === undefined ||
-      (typeof value === 'string' && value.trim.length === 0)
-    validState[name] = (!isRequired && isEmpty) || validate(args)
+    const { fieldInfo } = args
+    const { name, validate } = fieldInfo
+    validState[name] = validate(args)
     const allValid = _.reduce(
       validState,
       (result, value, key) => result && value,

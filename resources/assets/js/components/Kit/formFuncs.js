@@ -2,6 +2,10 @@ import numeral from 'numeral'
 import emailMask from 'text-mask-addons/dist/emailMask'
 import _ from 'lodash'
 
+function textField(opts = {}) {
+  return { ...opts }
+}
+
 function integerField(opts = {}) {
   const min = opts.min || 0
   const max = opts.max || 0
@@ -84,17 +88,14 @@ function toggleField(opts = {}) {
 }
 
 function emailField(opts = {}) {
-  return _.extend(
-    {
-      mask: emailMask,
-      validate: ({ value }) =>
-        value.length === 0 ||
-        value.match(
-          /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-        ) !== null,
-    },
-    opts,
-  )
+  return textField({
+    mask: emailMask,
+    validate: ({ value }) =>
+      value.match(
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+      ) !== null,
+    ...opts,
+  })
 }
 
 function sectionField(opts = {}) {

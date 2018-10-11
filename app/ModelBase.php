@@ -1,6 +1,7 @@
 <?php
 namespace App;
 
+use App\Traits\Recalculatable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -8,6 +9,12 @@ use malkusch\lock\mutex\MySQLMutex;
 
 class ModelBase extends Model
 {
+  use Recalculatable;
+
+  public static function registerObservers()
+  {
+  }
+
   protected $computed = [];
   public function __construct(array $attributes = [])
   {

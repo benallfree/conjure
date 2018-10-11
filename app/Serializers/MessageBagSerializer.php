@@ -2,9 +2,9 @@
 
 namespace App\Serializers;
 
-class MessageBagSerializer
+class MessageBagSerializer extends SerializerBase
 {
-  public static function serialize($o)
+  public static function serialize($o, $context = [])
   {
     $ret = [];
     foreach ($o->keys() as $k) {

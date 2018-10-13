@@ -31,8 +31,20 @@ class ComponentBase extends Component {
   componentDidMount() {
     this.privateIsMounted = true
     this.reset()
-    const p = this.loadData()
+    let p = this.loadState()
     if (p) {
+      const isPromise = typeof p.then === 'function'
+      if (!isPromise) {
+        const stateNames = _.keys(p)
+        const promises = _.values(p)
+        p = Promise.all(promises).then(responses => {
+          const newState = {}
+          _.each(stateNames, (k, i) => {
+            newState[k] = responses[i]
+          })
+          this.setState(newState)
+        })
+      }
       this.async(() => p)
     } else {
       const { _async } = this.state
@@ -69,7 +81,6 @@ class ComponentBase extends Component {
     let { _async } = this.state
     const isGet = typeof cbOrName !== 'function'
     if (isGet) {
-      console.log(`Get ${cbOrName}`)
       return _async[cbOrName] || _.cloneDeep(ASYNC_STRUCT)
     }
     const cb = cbOrName
@@ -77,7 +88,6 @@ class ComponentBase extends Component {
     handle.isLoading = true
     _async[name] = _.cloneDeep(handle)
     this.setState({ _async })
-    console.log(`Call ${name}`, cb)
 
     return new Promise(async resolve => {
       try {
@@ -104,7 +114,7 @@ class ComponentBase extends Component {
     })
   }
 
-  loadData() {
+  loadState() {
     return null
   }
 

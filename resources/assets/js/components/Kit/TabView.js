@@ -7,15 +7,17 @@ import { RouteButton } from './RouteButton'
 
 class TabView extends Component {
   render() {
-    const { panes, match } = this.props
+    const { panes, match, ...rest } = this.props
     const finalPanes = {}
     _.each(panes, (pane, k) => {
       const defaults = {
+        match,
         to: k,
         label: changeCase.title(k),
         component: () => <div> {changeCase.title(k)} Tab Content</div>,
       }
       const args = { ...defaults, ...pane }
+      args.path = _.compact([match.path, args.to]).join('/')
       args.to = _.compact([match.url, args.to]).join('/')
       finalPanes[k] = args
     })
@@ -40,8 +42,9 @@ class TabView extends Component {
                 key={k}
                 path={path}
                 render={props => (
-                  <UserComponent {...props} {...rest} parentMatch={match} />
+                  <UserComponent {...props} parentMatch={match} />
                 )}
+                exact
               />
             )
           })}

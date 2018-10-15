@@ -7,7 +7,7 @@ const RouteButton = ({ to, children, ...rest }) => (
   <Route
     component={({ location, history }) => (
       <Button
-        active={location.pathname === to}
+        active={location.pathname.startsWith(to)}
         onClick={() => {
           history.push(to)
         }}

@@ -51,7 +51,7 @@ import { Api } from '../../Api'
 import { AsyncBase } from '../AsyncBase'
 
 class Main extends ComponentBase {
-  loadData() {
+  loadState() {
     return Api.ping()
   }
 
@@ -161,7 +161,7 @@ Instead of calling `render()` directly, call `renderLoaded()`. This ensures that
 
 **Type #1: Initializing with Async Data**
 
-If your component can't be used without first loading some async data, override the `loadData()` method. Your `renderLoaded()`
+If your component can't be used without first loading some async data, override the `loadState()` method. Your `renderLoaded()`
 
 **Type #2: Performing Async Operations**
 

@@ -230,7 +230,7 @@ class Form extends ComponentBase {
   }
 
   renderLoaded() {
-    const { input, helpState, allValid, save = { ...ASYNC } } = this.state
+    const { input, helpState, allValid, save = ASYNC } = this.state
     const { context } = this.props
 
     const saveButton = (

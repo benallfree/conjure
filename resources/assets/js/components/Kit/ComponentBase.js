@@ -85,6 +85,10 @@ class ComponentBase extends Component {
     )
   }
 
+  renderHeader(data) {
+    return null
+  }
+
   render() {
     const { isMounted } = this.state
     if (!isMounted) return null
@@ -97,7 +101,13 @@ class ComponentBase extends Component {
       },
       {},
     )
-    return <Async watch={watches} onLoaded={data => this.renderLoaded(data)} />
+    return (
+      <Async
+        watch={watches}
+        onHeader={data => this.renderHeader(data)}
+        onLoaded={data => this.renderLoaded(data)}
+      />
+    )
   }
 }
 

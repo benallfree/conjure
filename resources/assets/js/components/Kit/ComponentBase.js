@@ -28,45 +28,52 @@ class ComponentBase extends Component {
   }
 
   setState(obj, cb = null) {
-    _.each(obj, (v, k) => {
-      if (!(typeof v === 'function' || typeof v.then === 'function')) {
-        super.setState({ [k]: v })
-        return
-      }
-
-      super.setState(
-        {
-          [k]: {
+    const promiseKeys = []
+    const newState = _.reduce(
+      obj,
+      (res, v, k) => {
+        if (!(typeof v === 'function' || typeof v.then === 'function')) {
+          res[k] = v
+        } else {
+          promiseKeys.push(k)
+          res[k] = {
             ...ASYNC,
             isLoading: true,
-          },
-        },
-        async () => {
-          const promise = typeof v === 'function' ? v() : v
-          if (!promise || typeof promise.then !== 'function') {
-            throw new Error(`${k} must resolve to a promise.`)
           }
-
-          try {
-            const response = await promise
-            super.setState({
-              [k]: {
-                ...ASYNC,
-                isLoaded: true,
-                response,
-              },
-            })
-          } catch (error) {
+        }
+        return res
+      },
+      {},
+    )
+    super.setState(newState, () => {
+      const promises = _.map(promiseKeys, (k, i) => {
+        const v = obj[k]
+        const promise = typeof v === 'function' ? v() : v
+        if (!promise || typeof promise.then !== 'function') {
+          throw new Error(`${k} must resolve to a promise.`)
+        }
+        return promise
+          .then(response => ({
+            ...ASYNC,
+            isLoaded: true,
+            response,
+          }))
+          .catch(error => {
             console.error(`Error on async '${k}':`, error.message)
-            super.setState({
-              [k]: {
-                ...ASYNC,
-                error,
-              },
-            })
-          }
-        },
-      )
+            return {
+              ...ASYNC,
+              error,
+            }
+          })
+      })
+
+      Promise.all(promises).then(results => {
+        const finalState = {}
+        _.each(promiseKeys, (k, i) => {
+          finalState[k] = results[i]
+        })
+        super.setState(finalState, cb)
+      })
     })
   }
 

@@ -14,10 +14,10 @@ import {
 import changeCase from 'change-case'
 import MaskedInput from 'react-text-mask'
 import { createMask } from './formFuncs'
+import { ComponentBase, ASYNC } from './ComponentBase'
 
-class Form extends Component {
-  constructor(props) {
-    super(props)
+class Form extends ComponentBase {
+  loadState() {
     const input = {}
     const { context } = this.props
     let allValid = true
@@ -31,7 +31,7 @@ class Form extends Component {
       }
       input[name] = v === null ? '' : v
     })
-    this.state = {
+    return {
       input,
       helpState: {},
       allValid,
@@ -43,6 +43,7 @@ class Form extends Component {
         },
         {},
       ),
+      changedSinceLastBlur: true,
     }
   }
 
@@ -145,27 +146,47 @@ class Form extends Component {
     return ret
   }
 
-  updateInput = (args, valueField = 'value') => (e, d) => {
+  componentDidMount() {
+    super.componentDidMount()
+    this.notifyValidState()
+  }
+
+  notifyValidState() {
+    const { allValid, input, changedSinceLastBlur } = this.state
+    const { onValid, onInvalid } = this.props
+    if (!changedSinceLastBlur) return
+    this.setState({ changedSinceLastBlur: false })
+    if (allValid) {
+      onValid(input)
+    } else {
+      onInvalid(input)
+    }
+  }
+
+  handleChange = (args, valueField = 'value') => (e, d) => {
     const { input } = this.state
     const { fieldInfo } = args
     const { name, unmask } = fieldInfo
     const { value: maskedValue, ...rest } = args
     const value = unmask({ ...rest, value: d[valueField] })
     input[fieldInfo.name] = value
-    this.setState({ input })
+    this.setState({ input, changedSinceLastBlur: true })
+    this.props.onChange(fieldInfo.name, value, input)
   }
 
-  onBlur = args => e => {
-    if (this.validate(args)) {
+  handleBlur = args => e => {
+    this.validate(args, () => {
+      const { input } = this.state
       const { fieldInfo } = args
       const { format } = fieldInfo
-      const { input } = this.state
       input[fieldInfo.name] = format(args)
-      this.setState({ input })
-    }
+      this.setState({ input }, () => {
+        this.notifyValidState()
+      })
+    })
   }
 
-  validate = args => {
+  validate = (args, cb = null) => {
     const { validState } = this.state
     const { fieldInfo } = args
     const { name, validate } = fieldInfo
@@ -175,7 +196,7 @@ class Form extends Component {
       (result, value, key) => result && value,
       true,
     )
-    this.setState({ allValid, validState })
+    this.setState({ allValid, validState }, cb)
     return validState[name]
   }
 
@@ -188,9 +209,9 @@ class Form extends Component {
   }
 
   fieldErrorMessage = fieldName => {
-    const state = this.props.asyncState
+    const { save } = this.state
     try {
-      return state.error.response.messages[fieldName] || null
+      return save.error.response.messages[fieldName] || null
     } catch (e) {
       return null
     }
@@ -199,7 +220,7 @@ class Form extends Component {
   handleSave = () => {
     const { input } = this.state
     const { onSave } = this.props
-    onSave(input)
+    this.setState({ save: onSave(input) })
   }
 
   handleHelp = name => {
@@ -208,17 +229,17 @@ class Form extends Component {
     this.setState({ helpState })
   }
 
-  render() {
-    const { input, helpState, allValid } = this.state
-    const { asyncState, context } = this.props
+  renderLoaded() {
+    const { input, helpState, allValid, save = { ...ASYNC } } = this.state
+    const { context } = this.props
 
-    const save = (
+    const saveButton = (
       <Table.Row>
         <Table.Cell />
         <Table.Cell style={{ textAlign: 'right' }}>
           <Button
-            loading={asyncState.isLoading}
-            disabled={!allValid || asyncState.isLoading}
+            loading={save.isLoading}
+            disabled={!allValid || save.isLoading}
             primary
             negative={!allValid}
             onClick={this.handleSave}
@@ -251,7 +272,7 @@ class Form extends Component {
               error={this.hasFieldError(args)}
               label={inputLabel(args) || null}
               style={{ width: '100%' }}
-              onBlur={this.onBlur(args)}
+              onBlur={this.handleBlur(args)}
               input={
                 <MaskedInput
                   mask={mask(args)}
@@ -259,7 +280,9 @@ class Form extends Component {
                   placeholder={placeholder(args)}
                   showMask={mask(args) !== false}
                   onChange={event =>
-                    this.updateInput(args)(event, { value: event.target.value })
+                    this.handleChange(args)(event, {
+                      value: event.target.value,
+                    })
                   }
                 />
               }
@@ -274,10 +297,10 @@ class Form extends Component {
               selection
               options={options(args)}
               defaultValue={input[name]}
-              onChange={this.updateInput(args)}
+              onChange={this.handleChange(args)}
               style={{ width: '100%' }}
               label={inputLabel(args) || null}
-              onBlur={this.onBlur(args)}
+              onBlur={this.handleBlur(args)}
             />
           )
           break
@@ -286,8 +309,8 @@ class Form extends Component {
             <Checkbox
               toggle
               defaultChecked={input[name]}
-              onChange={this.updateInput(args, 'checked')}
-              onBlur={this.onBlur(args)}
+              onChange={this.handleChange(args, 'checked')}
+              onBlur={this.handleBlur(args)}
             />
           )
           break
@@ -344,9 +367,9 @@ class Form extends Component {
 
     return (
       <div>
-        {asyncState.isLoaded && <Message success>Saved</Message>}
-        {asyncState.isLoading && <Message>Saving</Message>}
-        {asyncState.error && (
+        {save.isLoaded && <Message success>Saved</Message>}
+        {save.isLoading && <Message>Saving</Message>}
+        {save.error && (
           <Message error>
             Please correct the errors below and try again.
           </Message>
@@ -354,12 +377,19 @@ class Form extends Component {
         <Table definition>
           <Table.Body>
             {rows}
-            {save}
+            {saveButton}
           </Table.Body>
         </Table>
       </div>
     )
   }
+}
+
+Form.defaultProps = {
+  onChange: () => {},
+  onSave: () => {},
+  onValid: () => {},
+  onInvalid: () => {},
 }
 
 export * from './formFuncs'

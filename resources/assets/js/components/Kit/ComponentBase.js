@@ -1,17 +1,9 @@
 import React, { Component } from 'react'
 import _ from 'lodash'
 import queryString from 'query-string'
-import {
-  Message,
-  Header,
-  Sticky,
-  Dimmer,
-  Loader,
-  Image,
-  Segment,
-} from 'semantic-ui-react'
+import { Async } from './Async'
 
-const ASYNC_STRUCT = {
+const ASYNC = {
   isLoading: false,
   isLoaded: false,
   error: null,
@@ -25,101 +17,64 @@ class ComponentBase extends Component {
       const values = queryString.parse(this.props.location.search)
       _.merge(this.props.match.params, values)
     }
-    this.reset()
+    this.state = { isMounted: false }
+    this.watchKeys = []
   }
 
   componentDidMount() {
-    this.privateIsMounted = true
-    this.reset()
-    let p = this.loadState()
-    if (p) {
-      const isPromise = typeof p.then === 'function'
-      if (!isPromise) {
-        const stateNames = _.keys(p)
-        const promises = _.values(p)
-        p = Promise.all(promises).then(responses => {
-          const newState = {}
-          _.each(stateNames, (k, i) => {
-            newState[k] = responses[i]
-          })
-          this.setState(newState)
-        })
+    const state = this.loadState()
+    this.watchKeys = _.keys(state)
+    this.setState({ isMounted: true, ...state })
+  }
+
+  setState(obj, cb = null) {
+    _.each(obj, (v, k) => {
+      if (!(typeof v === 'function' || typeof v.then === 'function')) {
+        super.setState({ [k]: v })
+        return
       }
-      this.async(() => p)
-    } else {
-      const { _async } = this.state
-      _async.default.isLoaded = true
-      this.setState({ _async })
-    }
-  }
 
-  componentWillUnmount() {
-    this.privateIsMounted = false
-  }
+      super.setState(
+        {
+          [k]: {
+            ...ASYNC,
+            isLoading: true,
+          },
+        },
+        async () => {
+          const promise = typeof v === 'function' ? v() : v
+          if (!promise || typeof promise.then !== 'function') {
+            throw new Error(`${k} must resolve to a promise.`)
+          }
 
-  defaultState() {
-    return {}
-  }
-
-  reset(state = {}) {
-    const newState = _.merge(
-      this.defaultState(),
-      {
-        contentStyle: {},
-        _async: { default: ASYNC_STRUCT },
-      },
-      state,
-    )
-    if (this.privateIsMounted) {
-      this.setState(newState)
-    } else {
-      this.state = newState
-    }
-  }
-
-  async(cbOrName = 'default', name = 'default') {
-    let { _async } = this.state
-    const isGet = typeof cbOrName !== 'function'
-    if (isGet) {
-      return _async[cbOrName] || _.cloneDeep(ASYNC_STRUCT)
-    }
-    const cb = cbOrName
-    const handle = _.cloneDeep(ASYNC_STRUCT)
-    handle.isLoading = true
-    _async[name] = _.cloneDeep(handle)
-    this.setState({ _async })
-
-    return new Promise(async resolve => {
-      try {
-        const response = await cb()
-        ;({ _async } = this.state)
-        _async[name] = {
-          isLoading: false,
-          isLoaded: true,
-          response,
-          error: null,
-        }
-      } catch (error) {
-        console.error(`Error on async '${name}':`, error.message)
-        ;({ _async } = this.state)
-        _async[name] = {
-          isLoading: false,
-          isLoaded: false,
-          response: null,
-          error,
-        }
-      } finally {
-        this.setState({ _async }, () => resolve(_async[name]))
-      }
+          try {
+            const response = await promise
+            super.setState({
+              [k]: {
+                ...ASYNC,
+                isLoaded: true,
+                response,
+              },
+            })
+          } catch (error) {
+            console.error(`Error on async '${k}':`, error.message)
+            super.setState({
+              [k]: {
+                ...ASYNC,
+                error,
+              },
+            })
+          }
+        },
+      )
     })
   }
 
   loadState() {
-    return null
+    return {}
   }
 
-  renderLoaded() {
-    const { data } = this.state
+  renderLoaded(data) {
     return (
       <div>
         Default resolver component. Override this.
@@ -130,73 +85,20 @@ class ComponentBase extends Component {
     )
   }
 
-  renderLoading() {
-    return (
-      <Segment>
-        <Dimmer active>
-          <Loader />
-        </Dimmer>
-
-        <Image src="https://react.semantic-ui.com/images/wireframe/short-paragraph.png" />
-      </Segment>
-    )
-  }
-
-  renderError() {
-    const { error } = this.async()
-    return (
-      <Message negative>
-        <Message.Header>Error loading data</Message.Header>
-        <p>{error.message}</p>
-      </Message>
-    )
-  }
-
-  renderHeader() {
-    const { title } = this.state
-    if (!title) return null
-    return (
-      <Header as="h1" block>
-        {title}
-      </Header>
-    )
-  }
-
-  handleStick = () => {
-    this.setState({ contentStyle: { paddingTop: 56 } })
-  }
-
-  handleUnstick = () => {
-    this.setState({ contentStyle: { paddingTop: 0 } })
-  }
-
-  handleContextRef = contextRef => this.setState({ contextRef })
-
   render() {
-    const { isLoading, isLoaded, error, response } = this.async()
-
-    const { contentStyle, contextRef } = this.state
-    const header = this.renderHeader()
-    return (
-      <div ref={this.handleContextRef} className="stickyContainer">
-        {header && (
-          <Sticky
-            context={contextRef}
-            offset={5}
-            onStick={this.handleStick}
-            onUnstick={this.handleUnstick}
-          >
-            {header}
-          </Sticky>
-        )}
-        <div style={contentStyle}>
-          {isLoading && this.renderLoading()}
-          {isLoaded && this.renderLoaded(response)}
-          {error && this.renderError()}
-        </div>
-      </div>
+    const { isMounted } = this.state
+    if (!isMounted) return null
+    const watches = _.reduce(
+      this.watchKeys,
+      (r, k) => {
+        const { [k]: v } = this.state
+        if (v && typeof v.isLoading !== 'undefined') r[k] = v
+        return r
+      },
+      {},
     )
+    return <Async watch={watches} onLoaded={data => this.renderLoaded(data)} />
   }
 }
 
-export { ComponentBase }
+export { ComponentBase, ASYNC }

@@ -148,7 +148,7 @@ class Form extends ComponentBase {
 
   componentDidMount() {
     super.componentDidMount()
-    this.notifyValidState()
+    setImmediate(() => this.notifyValidState())
   }
 
   notifyValidState() {

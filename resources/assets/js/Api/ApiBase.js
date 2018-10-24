@@ -1,7 +1,21 @@
+import _ from 'lodash'
+import moment from 'moment'
 import { ApiError } from './ApiError'
 import { BusinessRuleError } from './BusinessRuleError'
 
 class ApiBase {
+  route(path, args = {}) {
+    const finalArgs = {}
+    _.each(args, (v, k) => {
+      if (moment.isMoment(v)) {
+        finalArgs[k] = v.valueOf()
+      } else {
+        finalArgs[k] = v
+      }
+    })
+    return route(path, finalArgs)
+  }
+
   get(url) {
     return this.axios({ method: 'get', url })
   }

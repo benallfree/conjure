@@ -1,5 +1,7 @@
+import moment from 'moment-timezone'
 window._ = require('lodash')
 window.Popper = require('popper.js').default
+moment.tz.setDefault('UTC')
 
 /**
  * We'll load jQuery and the Bootstrap jQuery plugin which provides support

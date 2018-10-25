@@ -20,17 +20,14 @@ class ComponentBase extends Component {
     this.state = {}
     this.watchKeys = []
     this.privateIsMounted = false
-    console.error('constructor', this.constructor.name)
   }
 
   componentWillUnmount() {
-    console.error('componentWillUnmount', this.constructor.name)
     this.privateIsMounted = false
   }
 
   componentDidMount() {
     this.privateIsMounted = true
-    console.error('componentDidMount', this.constructor.name)
     const state = this.loadState()
     this.watchKeys = _.keys(state)
     this.setState(state)

@@ -153,13 +153,13 @@ class Form extends ComponentBase {
 
   notifyValidState() {
     const { allValid, input, changedSinceLastBlur } = this.state
-    const { onValid, onInvalid } = this.props
+    const { onValid, onInvalid, context } = this.props
     if (!changedSinceLastBlur) return
     this.setState({ changedSinceLastBlur: false })
     if (allValid) {
-      onValid(input)
+      onValid(input, context)
     } else {
-      onInvalid(input)
+      onInvalid(input, context)
     }
   }
 

@@ -17,14 +17,23 @@ class ComponentBase extends Component {
       const values = queryString.parse(this.props.location.search)
       _.merge(this.props.match.params, values)
     }
-    this.state = { isMounted: false }
+    this.state = {}
     this.watchKeys = []
+    this.privateIsMounted = false
+    console.error('constructor', this.constructor.name)
+  }
+
+  componentWillUnmount() {
+    console.error('componentWillUnmount', this.constructor.name)
+    this.privateIsMounted = false
   }
 
   componentDidMount() {
+    this.privateIsMounted = true
+    console.error('componentDidMount', this.constructor.name)
     const state = this.loadState()
     this.watchKeys = _.keys(state)
-    this.setState({ isMounted: true, ...state })
+    this.setState(state)
   }
 
   setState(obj, cb = null) {
@@ -72,7 +81,7 @@ class ComponentBase extends Component {
         _.each(promiseKeys, (k, i) => {
           finalState[k] = results[i]
         })
-        super.setState(finalState, cb)
+        if (this.privateIsMounted) super.setState(finalState, cb)
       })
     })
   }
@@ -97,8 +106,7 @@ class ComponentBase extends Component {
   }
 
   render() {
-    const { isMounted } = this.state
-    if (!isMounted) return null
+    if (!this.privateIsMounted) return null
     const watches = _.reduce(
       this.watchKeys,
       (r, k) => {

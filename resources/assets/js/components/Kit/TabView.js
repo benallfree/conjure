@@ -34,8 +34,16 @@ class TabView extends Component {
         </Button.Group>
         <Switch>
           {_.map(finalPanes, (pane, k) => {
-            const { to, component } = pane
-            return <Route key={k} exact path={to} component={component} />
+            const { path, component: UserComponent } = pane
+            return (
+              <Route
+                key={k}
+                path={path}
+                render={props => (
+                  <UserComponent {...props} {...rest} parentMatch={match} />
+                )}
+              />
+            )
           })}
         </Switch>
       </div>

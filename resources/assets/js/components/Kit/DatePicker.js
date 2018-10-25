@@ -56,9 +56,19 @@ const OPTIONS = {
   },
 }
 
+function createDateRange(v) {
+  let start = moment()
+  let end = moment()
+  if (OPTIONS[v]) {
+    start = OPTIONS[v].start || moment()
+    end = OPTIONS[v].end || moment()
+  }
+  return { start, end }
+}
+
 class DatePicker extends React.Component {
   handleDateChange = (e, { name, value }) => {
-    this.setState({ [name]: moment(value, DATE_FORMAT) })
+    this.setState({ [name]: moment(value, DATE_FORMAT) }, this.notifyChange)
   }
 
   componentWillMount() {
@@ -66,24 +76,27 @@ class DatePicker extends React.Component {
   }
 
   onDateSelected = (e, d) => {
-    this.setDateRange(d.value)
+    this.setDateRange(d.value, this.notifyChange)
   }
 
-  setDateRange = v => {
-    let start = moment()
-    let end = moment()
-    if (OPTIONS[v]) {
-      start = OPTIONS[v].start || moment()
-      end = OPTIONS[v].end || moment()
-    }
-    this.setState({
-      date: v,
-      start,
-      end,
-      isCustomOpen: v === 'custom',
-    })
+  setDateRange = (v, cb = null) => {
+    const { start, end } = createDateRange(v)
+    this.setState(
+      {
+        date: v,
+        start,
+        end,
+        isCustomOpen: v === 'custom',
+      },
+      cb,
+    )
+  }
+
+  notifyChange() {
     const { onChange } = this.props
-    if (onChange) onChange(start, end)
+    if (!onChange) return
+    const { start, end } = this.state
+    onChange(start, end)
   }
 
   /* eslint-disable indent */
@@ -137,4 +150,4 @@ class DatePicker extends React.Component {
   }
 }
 
-export { DatePicker }
+export { DatePicker, createDateRange }

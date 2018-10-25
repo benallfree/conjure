@@ -21,8 +21,8 @@ class SerializerBase
   {
     return array_merge([
       'id',
-      'created_at' => function ($k, $o, $context) {return $o->$k->toRfc822String();},
-      'updated_at' => function ($k, $o, $context) {return $o->$k->toRfc822String();},
+      'createdAt',
+      'updatedAt',
     ], $extra);
   }
 
@@ -33,7 +33,8 @@ class SerializerBase
     foreach ($fields as $k => $v) {
       if (is_numeric($k)) {
         $k = $v;
-        $v = function ($k, $o, $context, $viewName) {return $o->$k;};
+        $v = function ($k, $o, $context, $viewName) {
+          return $o->{snake_case($k)};};
       }
       $final[$k] = $v;
     }
@@ -67,6 +68,17 @@ class SerializerBase
     $rec = [];
     foreach ($fields as $k => $v) {
       $rec[$k] = $v($k, $o, $context, $viewName);
+      if (is_object($rec[$k])) {
+        $class_name = get_class($rec[$k]);
+        switch ($class_name) {
+          case \Illuminate\Support\Carbon::class:
+          case \Carbon\Carbon::class:
+            $rec[$k] = $rec[$k]->toRfc822String();
+            break;
+          default:
+            throw new \Exception("Do no know how to serialize object ${class_name}");
+        }
+      }
     }
     return $rec;
   }

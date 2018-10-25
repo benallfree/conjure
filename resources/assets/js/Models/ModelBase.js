@@ -4,17 +4,27 @@ import _ from 'lodash'
 export class ModelBase {
   static SAFETY_LIMIT = 1000
 
+  static DATES = ['createdAt', 'updatedAt']
+
   constructor(item) {
     _.each(this.constructor.transform(item), (v, k) => {
       this[k] = v
     })
   }
 
+  static getDates(extra = []) {
+    return [...this.DATES, ...extra]
+  }
+
   static getMutators() {
-    return {
-      created_at: moment,
-      updated_at: moment,
-    }
+    return _.reduce(
+      this.getDates(),
+      (r, v) => {
+        r[v] = moment
+        return r
+      },
+      {},
+    )
   }
 
   static transform(item) {

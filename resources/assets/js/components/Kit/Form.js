@@ -14,7 +14,8 @@ import {
 import changeCase from 'change-case'
 import MaskedInput from 'react-text-mask'
 import { createMask } from './formFuncs'
-import { ComponentBase, ASYNC } from './ComponentBase'
+import { ComponentBase } from './ComponentBase'
+import { Async } from './Async'
 
 class Form extends ComponentBase {
   loadState() {
@@ -230,7 +231,7 @@ class Form extends ComponentBase {
   }
 
   renderLoaded() {
-    const { input, helpState, allValid, save = ASYNC } = this.state
+    const { input, helpState, allValid, save = Async.DEFAULT } = this.state
     const { context } = this.props
 
     const saveButton = (

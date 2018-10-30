@@ -3,13 +3,6 @@ import _ from 'lodash'
 import queryString from 'query-string'
 import { Async } from './Async'
 
-const ASYNC = {
-  isLoading: false,
-  isLoaded: false,
-  error: null,
-  response: null,
-}
-
 class ComponentBase extends Component {
   constructor(props) {
     super(props)
@@ -33,7 +26,7 @@ class ComponentBase extends Component {
     this.setState(state)
   }
 
-  setState(obj, cb = null) {
+  setState(obj, cb = () => {}) {
     const promiseKeys = []
     const newState = _.reduce(
       obj,
@@ -43,7 +36,7 @@ class ComponentBase extends Component {
         } else {
           promiseKeys.push(k)
           res[k] = {
-            ...ASYNC,
+            ...Async.DEFAULT,
             isLoading: true,
           }
         }
@@ -60,14 +53,14 @@ class ComponentBase extends Component {
         }
         return promise
           .then(response => ({
-            ...ASYNC,
+            ...Async.DEFAULT,
             isLoaded: true,
             response,
           }))
           .catch(error => {
             console.error(`Error on async '${k}':`, error.message)
             return {
-              ...ASYNC,
+              ...Async.DEFAULT,
               error,
             }
           })
@@ -78,7 +71,8 @@ class ComponentBase extends Component {
         _.each(promiseKeys, (k, i) => {
           finalState[k] = results[i]
         })
-        if (this.privateIsMounted) super.setState(finalState, cb)
+        if (this.privateIsMounted)
+          super.setState(finalState, () => cb(finalState))
       })
     })
   }
@@ -123,4 +117,4 @@ class ComponentBase extends Component {
   }
 }
 
-export { ComponentBase, ASYNC }
+export { ComponentBase }

@@ -113,4 +113,11 @@ Async.defaultProps = {
   onHeader: data => null,
 }
 
+Async.DEFAULT = {
+  isLoading: false,
+  isLoaded: false,
+  error: null,
+  response: null,
+}
+
 export { Async }

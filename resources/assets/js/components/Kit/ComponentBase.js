@@ -115,6 +115,11 @@ class ComponentBase extends Component {
       />
     )
   }
+
+  asyncState(k) {
+    if (typeof this.state[k] === 'undefined') return Async.DEFAULT
+    return this.state[k]
+  }
 }
 
 export { ComponentBase }

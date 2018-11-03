@@ -42,9 +42,8 @@ class TabView extends Component {
                 key={k}
                 path={path}
                 render={props => (
-                  <UserComponent {...props} parentMatch={match} />
+                  <UserComponent {...props} {...rest} parentMatch={match} />
                 )}
-                exact
               />
             )
           })}

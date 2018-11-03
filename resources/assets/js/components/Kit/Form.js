@@ -164,14 +164,18 @@ class Form extends ComponentBase {
     }
   }
 
-  handleChange = (args, valueField = 'value') => (e, d) => {
+  handleChangeAndBlur = (args, valueField = 'value') => (e, d) => {
+    this.handleChange(args, valueField, () => this.handleBlur(args)(e))(e, d)
+  }
+
+  handleChange = (args, valueField = 'value', cb = () => {}) => (e, d) => {
     const { input } = this.state
     const { fieldInfo } = args
     const { name, unmask } = fieldInfo
     const { value: maskedValue, ...rest } = args
     const value = unmask({ ...rest, value: d[valueField] })
     input[fieldInfo.name] = value
-    this.setState({ input, changedSinceLastBlur: true })
+    this.setState({ input, changedSinceLastBlur: true }, cb)
     this.props.onChange(fieldInfo.name, value, input)
   }
 
@@ -180,10 +184,8 @@ class Form extends ComponentBase {
       const { input } = this.state
       const { fieldInfo } = args
       const { format } = fieldInfo
-      input[fieldInfo.name] = format(args)
-      this.setState({ input }, () => {
-        this.notifyValidState()
-      })
+      input[fieldInfo.name] = format({ ...args, value: input[fieldInfo.name] })
+      this.setState({ input }, () => this.notifyValidState())
     })
   }
 
@@ -298,10 +300,9 @@ class Form extends ComponentBase {
               selection
               options={options(args)}
               defaultValue={input[name]}
-              onChange={this.handleChange(args)}
+              onChange={this.handleChangeAndBlur(args)}
               style={{ width: '100%' }}
               label={inputLabel(args) || null}
-              onBlur={this.handleBlur(args)}
             />
           )
           break
@@ -310,8 +311,7 @@ class Form extends ComponentBase {
             <Checkbox
               toggle
               defaultChecked={input[name]}
-              onChange={this.handleChange(args, 'checked')}
-              onBlur={this.handleBlur(args)}
+              onChange={this.handleChangeAndBlur(args, 'checked')}
             />
           )
           break

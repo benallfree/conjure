@@ -57,13 +57,13 @@ const OPTIONS = {
 }
 
 function createDateRange(v) {
-  let start = moment()
+  let start = moment().startOf('day')
   let end = moment()
   if (OPTIONS[v]) {
     start = OPTIONS[v].start || moment()
     end = OPTIONS[v].end || moment()
   }
-  return { start, end }
+  return { start: start.startOf('day'), end: end.endOf('day') }
 }
 
 class DatePicker extends React.Component {

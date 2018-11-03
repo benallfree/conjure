@@ -73,7 +73,7 @@ class SerializerBase
         switch ($class_name) {
           case \Illuminate\Support\Carbon::class:
           case \Carbon\Carbon::class:
-            $rec[$k] = $rec[$k]->toRfc822String();
+            $rec[$k] = (int) $rec[$k]->timestamp * 1000;
             break;
           default:
             throw new \Exception("Do no know how to serialize object ${class_name}");

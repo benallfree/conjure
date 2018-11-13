@@ -31,14 +31,14 @@ class ComponentBase extends Component {
     const newState = _.reduce(
       obj,
       (res, v, k) => {
-        if (!(typeof v === 'function' || typeof v.then === 'function')) {
-          res[k] = v
-        } else {
+        if (v && (typeof v === 'function' || typeof v.then === 'function')) {
           promiseKeys.push(k)
           res[k] = {
             ...Async.DEFAULT,
             isLoading: true,
           }
+        } else {
+          res[k] = v
         }
         return res
       },
@@ -72,7 +72,7 @@ class ComponentBase extends Component {
           finalState[k] = results[i]
         })
         if (this.privateIsMounted)
-          super.setState(finalState, () => cb(finalState))
+          super.setState(finalState, () => cb && cb(finalState))
       })
     })
   }

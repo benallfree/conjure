@@ -11,7 +11,7 @@ class SerializerBase
 {
   public static function getViews($extra = [])
   {
-    $fields = static::_getFields();
+    $fields = static::getFields();
     return array_merge([
       'serialize' => array_keys($fields),
     ], $extra);
@@ -19,16 +19,12 @@ class SerializerBase
 
   public static function getFields($extra = [])
   {
-    return array_merge([
+    $fields = array_merge([
       'id',
       'createdAt',
       'updatedAt',
     ], $extra);
-  }
 
-  protected static function _getFields()
-  {
-    $fields = static::getFields();
     $final = [];
     foreach ($fields as $k => $v) {
       if (is_numeric($k)) {
@@ -48,7 +44,7 @@ class SerializerBase
       throw new \Exception("View {$name} is not a valid serialization view.");
     }
     $view = $views[$name];
-    $allFields = static::_getFields();
+    $allFields = static::getFields();
     $fields = array_slice_assoc($allFields, $view);
     array_unshift($arguments, $fields);
     array_unshift($arguments, $name);
@@ -65,6 +61,10 @@ class SerializerBase
       }
       return $res;
     }
+    if (!$o) {
+      return null;
+    }
+
     $rec = [];
     foreach ($fields as $k => $v) {
       $rec[$k] = $v($k, $o, $context, $viewName);

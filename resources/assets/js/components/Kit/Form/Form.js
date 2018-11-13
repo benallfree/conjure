@@ -10,41 +10,39 @@ import {
   Header,
   Icon,
   Label,
+  List,
 } from 'semantic-ui-react'
 import changeCase from 'change-case'
 import MaskedInput from 'react-text-mask'
 import { createMask } from './formFuncs'
-import { ComponentBase } from './ComponentBase'
-import { Async } from './Async'
+import { ComponentBase } from '../ComponentBase'
+import { Checklist } from './Checklist'
 
 class Form extends ComponentBase {
   loadState() {
     const input = {}
     const { context } = this.props
     let allValid = true
+    const validState = {}
     this.fields = this.buildFields()
     _.each(this.fields, fieldInfo => {
-      const { name, defaultValue, validate, format } = fieldInfo
-      let v = defaultValue({ context, fieldInfo })
-      allValid = allValid && validate({ context, fieldInfo, value: v })
-      if (allValid) {
+      const { name, defaultValue, validate, format, options } = fieldInfo
+      let v = defaultValue({ context, fieldInfo, options })
+      const isValid = validate({ context, fieldInfo, value: v }) === true
+      allValid = allValid && isValid
+      if (isValid) {
         v = format({ context, fieldInfo, value: v })
       }
+      validState[name] = true
       input[name] = v === null ? '' : v
     })
     return {
       input,
       helpState: {},
       allValid,
-      validState: _.reduce(
-        this.fields,
-        (res, value, key) => {
-          res[key] = true
-          return res
-        },
-        {},
-      ),
+      validState,
       changedSinceLastBlur: true,
+      fieldErrors: {},
     }
   }
 
@@ -59,7 +57,7 @@ class Form extends ComponentBase {
         <div>{changeCase.title(fieldInfo)} content</div>
       ),
       displayIf: () => true,
-      defaultValue: ({ fieldInfo }) => changeCase.title(fieldInfo.name),
+      defaultValue: ({ fieldInfo }) => null,
       inputLabel: () => '',
       help: () => null,
       validate: () => true,
@@ -68,6 +66,7 @@ class Form extends ComponentBase {
       inputFormat: ({ value }) => value,
       format: ({ value }) => value,
       input: ({ value }) => value,
+      calculate: () => {},
     }
 
     function createHandler({ handlerName, fieldHandler, defaultHandler }) {
@@ -109,8 +108,10 @@ class Form extends ComponentBase {
               value === undefined ||
               value === null ||
               (typeof value === 'string' && value.trim().length === 0)
-            const isValid = (!isRequired && isEmpty) || handler(args)
-            return isValid
+            if (isRequired && isEmpty) {
+              return 'Value is required'
+            }
+            return handler(args)
           }
         case 'defaultValue':
           return args => {
@@ -165,17 +166,23 @@ class Form extends ComponentBase {
   }
 
   handleChangeAndBlur = (args, valueField = 'value') => (e, d) => {
-    this.handleChange(args, valueField, () => this.handleBlur(args)(e))(e, d)
+    this.handleChange(args, valueField, newValue =>
+      this.handleBlur({ ...args, value: newValue })(e),
+    )(e, d)
   }
 
-  handleChange = (args, valueField = 'value', cb = () => {}) => (e, d) => {
+  handleChange = (args, valueField = 'value', cb = newValue => {}) => (
+    e,
+    d,
+  ) => {
     const { input } = this.state
     const { fieldInfo } = args
-    const { name, unmask } = fieldInfo
+    const { name, unmask, calculate } = fieldInfo
     const { value: maskedValue, ...rest } = args
     const value = unmask({ ...rest, value: d[valueField] })
     input[fieldInfo.name] = value
-    this.setState({ input, changedSinceLastBlur: true }, cb)
+    calculate({ ...args, form: input, value })
+    this.setState({ input, changedSinceLastBlur: true }, () => cb(value))
     this.props.onChange(fieldInfo.name, value, input)
   }
 
@@ -190,16 +197,18 @@ class Form extends ComponentBase {
   }
 
   validate = (args, cb = null) => {
-    const { validState } = this.state
+    const { validState, fieldErrors } = this.state
     const { fieldInfo } = args
     const { name, validate } = fieldInfo
-    validState[name] = validate(args)
+    const validResult = validate(args)
+    validState[name] = validResult === true
+    fieldErrors[name] = validResult
     const allValid = _.reduce(
       validState,
       (result, value, key) => result && value,
       true,
     )
-    this.setState({ allValid, validState }, cb)
+    this.setState({ allValid, validState, fieldErrors }, cb)
     return validState[name]
   }
 
@@ -208,22 +217,43 @@ class Form extends ComponentBase {
     const { fieldInfo } = args
     const { name } = fieldInfo
 
-    return !validState[name] || this.fieldErrorMessage(fieldInfo.name) !== null
+    return validState[name] === false
   }
 
   fieldErrorMessage = fieldName => {
-    const { save } = this.state
-    try {
-      return save.error.response.messages[fieldName] || null
-    } catch (e) {
-      return null
-    }
+    const { fieldErrors } = this.state
+    return fieldErrors[fieldName]
+  }
+
+  validateAll = () => {
+    return _.reduce(
+      this.fields,
+      (res, f, name) => {
+        const { input } = this.state
+        const { context } = this.props
+        const args = { form: input, context, fieldInfo: f, value: input[name] }
+        const isValid = this.validate(args)
+        return res && isValid
+      },
+      true,
+    )
   }
 
   handleSave = () => {
-    const { input } = this.state
+    const allValid = this.validateAll()
+    if (!allValid) return
+    const { input, fieldErrors, validState } = this.state
     const { onSave } = this.props
-    this.setState({ save: onSave(input) })
+    this.setState({
+      save: onSave(input).catch(e => {
+        _.each(e.response.messages, (m, k) => {
+          fieldErrors[k] = m
+          validState[k] = false
+        })
+        this.setState({ fieldErrors, validState })
+        throw e
+      }),
+    })
   }
 
   handleHelp = name => {
@@ -232,19 +262,31 @@ class Form extends ComponentBase {
     this.setState({ helpState })
   }
 
+  handleCancel = () => {
+    const { onCancel } = this.props
+    if (!onCancel) return
+    onCancel()
+  }
+
   renderLoaded() {
-    const { input, helpState, allValid, save = Async.DEFAULT } = this.state
-    const { context } = this.props
+    const { input, helpState, allValid } = this.state
+    const save = this.asyncState('save')
+    const { context, onCancel } = this.props
 
     const saveButton = (
       <Table.Row>
         <Table.Cell />
         <Table.Cell style={{ textAlign: 'right' }}>
+          {onCancel && (
+            <Button negative onClick={this.handleCancel}>
+              <Icon name="close" />
+              Cancel
+            </Button>
+          )}
           <Button
             loading={save.isLoading}
             disabled={!allValid || save.isLoading}
             primary
-            negative={!allValid}
             onClick={this.handleSave}
           >
             Save
@@ -303,6 +345,16 @@ class Form extends ComponentBase {
               onChange={this.handleChangeAndBlur(args)}
               style={{ width: '100%' }}
               label={inputLabel(args) || null}
+            />
+          )
+          break
+        case 'Checklist':
+          control = (
+            <Checklist
+              error={this.hasFieldError(args)}
+              options={options(args)}
+              defaultValues={input[name]}
+              onChange={this.handleChangeAndBlur(args)}
             />
           )
           break
@@ -389,6 +441,7 @@ class Form extends ComponentBase {
 Form.defaultProps = {
   onChange: () => {},
   onSave: () => {},
+  onCancel: null,
   onValid: () => {},
   onInvalid: () => {},
 }

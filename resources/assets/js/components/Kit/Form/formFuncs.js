@@ -93,10 +93,14 @@ function toggleField(config = {}) {
 function emailField(config = {}) {
   return textField({
     mask: emailMask,
-    validate: ({ value }) =>
-      value.match(
-        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-      ) !== null,
+    validate: ({ value }) => {
+      if (!value) return true
+      return (
+        value.match(
+          /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+        ) !== null
+      )
+    },
     ...config,
   })
 }

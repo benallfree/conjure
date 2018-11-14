@@ -1,4 +1,4 @@
-import { User } from '../Models'
+import { User } from '~/Models'
 import { ApiBase } from '~/Kit'
 
 class Api extends ApiBase {

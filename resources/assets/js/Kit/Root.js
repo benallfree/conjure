@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom'
 import _ from 'lodash'
-import { routes } from '../routes'
+import { routes } from '~/routes'
 
 const Root = () => (
   <Router>

@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import './bootstrap'
 import { AppContainer } from 'react-hot-loader'
-import { Root } from './components/Root'
+import { Root } from './Root'
 import '@fortawesome/fontawesome-free/css/all.css'
 import 'semantic-ui-css/semantic.min.css'
 
@@ -22,7 +22,7 @@ const id = setInterval(() => {
     render(Root)
 
     if (process.env.NODE_ENV === 'development' && module.hot) {
-      module.hot.accept('./components/Root', () => {
+      module.hot.accept('./Root', () => {
         render(Root)
       })
     }

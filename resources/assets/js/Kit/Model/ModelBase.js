@@ -1,7 +1,7 @@
 import moment from 'moment'
 import _ from 'lodash'
 
-export class ModelBase {
+class ModelBase {
   static SAFETY_LIMIT = 1000
 
   static DATES = ['createdAt', 'updatedAt']
@@ -48,3 +48,5 @@ export class ModelBase {
     return ret
   }
 }
+
+export { ModelBase }

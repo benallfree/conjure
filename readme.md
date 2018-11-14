@@ -89,7 +89,7 @@ Edit `resources/views/layouts/app.blade.php`
 Create `resources/assets/js/Models/MyModel.js`
 
 ```js
-import { ModelBase } from './ModelBase'
+import { ModelBase } from '../Kit'
 
 class MyModel extends ModelBase {}
 
@@ -140,7 +140,7 @@ async myApiCall() {
 Finally, create `resources/assets/js/Models/SearchResult.js` to receive your API results
 
 ```js
-import { ModelBase } from './ModelBase'
+import { ModelBase } from '../Kit'
 
 class SearchResult extends ModelBase {}
 

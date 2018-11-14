@@ -1,5 +1,5 @@
 import { User } from '../Models'
-import { ApiBase } from './ApiBase'
+import { ApiBase } from '~/Kit'
 
 class Api extends ApiBase {
   async onNeedsAuthentication() {

@@ -1,20 +1,17 @@
 import React, { Component } from 'react'
 import { Container, Card } from 'semantic-ui-react'
-import { ComponentBase } from './Kit'
-import { Api } from '../Api'
+import { ComponentBase } from '~/Kit'
+import { Api } from '~/Api'
 
 class Dashboard extends ComponentBase {
-  defaultState() {
+  loadState() {
     return {
+      user: Api.getCurrentUser(),
       title: 'Dashboard',
     }
   }
 
-  loadData() {
-    return Api.getCurrentUser()
-  }
-
-  renderLoaded(user) {
+  renderLoaded({ user }) {
     return (
       <Container style={{ marginTop: 10 }}>
         <Card>

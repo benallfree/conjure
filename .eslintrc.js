@@ -86,6 +86,7 @@ module.exports = {
   },
   settings: {
     'import/resolver': {
+      'babel-module': {},
       webpack: {
         config: './internals/webpack/webpack.prod.babel.js',
       },

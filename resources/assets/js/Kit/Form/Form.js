@@ -12,7 +12,7 @@ import {
   Label,
   List,
 } from 'semantic-ui-react'
-import changeCase from 'change-case'
+import changeCase, { paramCase } from 'change-case'
 import MaskedInput from 'react-text-mask'
 import { createMask } from './formFuncs'
 import { ComponentBase } from '../ComponentBase'
@@ -67,6 +67,10 @@ class Form extends ComponentBase {
       format: ({ value }) => value,
       input: ({ value }) => value,
       calculate: () => {},
+      icon: () => false,
+      params: () => {
+        return {}
+      },
     }
 
     function createHandler({ handlerName, fieldHandler, defaultHandler }) {
@@ -109,7 +113,7 @@ class Form extends ComponentBase {
               value === null ||
               (typeof value === 'string' && value.trim().length === 0)
             if (isRequired && isEmpty) {
-              return 'Value is required'
+              return `Required`
             }
             return handler(args)
           }
@@ -182,11 +186,31 @@ class Form extends ComponentBase {
     const value = unmask({ ...rest, value: d[valueField] })
     input[fieldInfo.name] = value
     calculate({ ...args, form: input, value })
-    this.setState({ input, changedSinceLastBlur: true }, () => cb(value))
+    this.setState({ input, changedSinceLastBlur: true }, () =>
+      this.setState({ allValid: this.calcAllValid() }, () => cb(value)),
+    )
     this.props.onChange(fieldInfo.name, value, input)
   }
 
+  calcAllValid() {
+    return _.reduce(
+      this.fields,
+      (res, f, name) => {
+        const { input } = this.state
+        const { context } = this.props
+        const { validate } = f
+        const args = { form: input, context, fieldInfo: f, value: input[name] }
+        const validResult = validate(args)
+        const isValid = validResult === true
+        return res && isValid
+      },
+      true,
+    )
+  }
+
   handleBlur = args => e => {
+    const { value } = args
+    if (value.length === 0) return
     this.validate(args, () => {
       const { input } = this.state
       const { fieldInfo } = args
@@ -203,11 +227,7 @@ class Form extends ComponentBase {
     const validResult = validate(args)
     validState[name] = validResult === true
     fieldErrors[name] = validResult
-    const allValid = _.reduce(
-      validState,
-      (result, value, key) => result && value,
-      true,
-    )
+    const allValid = this.calcAllValid()
     this.setState({ allValid, validState, fieldErrors }, cb)
     return validState[name]
   }
@@ -243,13 +263,15 @@ class Form extends ComponentBase {
     const allValid = this.validateAll()
     if (!allValid) return
     const { input, fieldErrors, validState } = this.state
-    const { onSave } = this.props
+    const { onSubmit } = this.props
     this.setState({
-      save: onSave(input).catch(e => {
-        _.each(e.response.messages, (m, k) => {
+      save: onSubmit(input).catch(e => {
+        if (!(e.response && e.response.messages)) throw e
+        _.each(_.pick(e.response.messages, _.keys(this.fields)), (m, k) => {
           fieldErrors[k] = m
           validState[k] = false
         })
+        fieldErrors['*'] = e.response.messages['*']
         this.setState({ fieldErrors, validState })
         throw e
       }),
@@ -268,182 +290,281 @@ class Form extends ComponentBase {
     onCancel()
   }
 
-  renderLoaded() {
-    const { input, helpState, allValid } = this.state
+  saveButtons() {
+    const { allValid } = this.state
     const save = this.asyncState('save')
-    const { context, onCancel } = this.props
-
-    const saveButton = (
-      <Table.Row>
-        <Table.Cell />
-        <Table.Cell style={{ textAlign: 'right' }}>
-          {onCancel && (
-            <Button negative onClick={this.handleCancel}>
-              <Icon name="close" />
-              Cancel
-            </Button>
-          )}
-          <Button
-            loading={save.isLoading}
-            disabled={!allValid || save.isLoading}
-            primary
-            onClick={this.handleSave}
-          >
-            Save
+    const {
+      onCancel,
+      saveButtonText,
+      saveButtonIcon,
+      cancelButtonText,
+    } = this.props
+    return (
+      <React.Fragment>
+        {onCancel && (
+          <Button negative onClick={this.handleCancel}>
+            <Icon name="close" />
+            {cancelButtonText}
           </Button>
+        )}
+        <Button
+          loading={save.isLoading}
+          disabled={!allValid || save.isLoading}
+          primary
+          onClick={this.handleSave}
+        >
+          {saveButtonIcon && <Icon name={saveButtonIcon} />}
+          {saveButtonText}
+        </Button>
+      </React.Fragment>
+    )
+  }
+
+  textField(fieldInfo, args) {
+    const { input } = this.state
+    const { placeholder, inputLabel, mask, icon, params } = fieldInfo
+    const { name } = fieldInfo
+    return (
+      <Input
+        error={this.hasFieldError(args)}
+        label={inputLabel(args) || null}
+        style={{ width: '100%' }}
+        onBlur={this.handleBlur(args)}
+        icon={icon(args)}
+        iconPosition="left"
+        input={
+          <MaskedInput
+            mask={mask(args)}
+            value={input[name]}
+            placeholder={placeholder(args)}
+            showMask={mask(args) !== false}
+            onChange={event =>
+              this.handleChange(args)(event, {
+                value: event.target.value,
+              })
+            }
+          />
+        }
+        {...params(args)}
+      />
+    )
+  }
+
+  dropdownField(fieldInfo, args) {
+    const { input } = this.state
+    const { inputLabel, options } = fieldInfo
+    const { name } = fieldInfo
+    return (
+      <Dropdown
+        error={this.hasFieldError(args)}
+        fluid
+        selection
+        options={options(args)}
+        defaultValue={input[name]}
+        onChange={this.handleChangeAndBlur(args)}
+        style={{ width: '100%' }}
+        label={inputLabel(args) || null}
+      />
+    )
+  }
+
+  checklistField(fieldInfo, args) {
+    const { input } = this.state
+    const { options } = fieldInfo
+    const { name } = fieldInfo
+    return (
+      <Checklist
+        error={this.hasFieldError(args)}
+        options={options(args)}
+        defaultValues={input[name]}
+        onChange={this.handleChangeAndBlur(args)}
+      />
+    )
+  }
+
+  toggleField(fieldInfo, args) {
+    const { input } = this.state
+    const { name } = fieldInfo
+    return (
+      <Checkbox
+        toggle
+        defaultChecked={input[name]}
+        onChange={this.handleChangeAndBlur(args, 'checked')}
+      />
+    )
+  }
+
+  sectionField(fieldInfo, args) {
+    const { label } = fieldInfo
+    return <Header h={3}>{label(args)}</Header>
+  }
+
+  divField(fieldInfo, args) {
+    const { content } = fieldInfo
+    return content(args)
+  }
+
+  renderSectionRow(fieldInfo, control, args) {
+    const { inputsOnly } = this.props
+    if (inputsOnly) {
+      return (
+        <React.Fragment>
+          <div style={{ marginTop: 20 }}>{control}</div>
+        </React.Fragment>
+      )
+    }
+    return (
+      <Table.Row>
+        <Table.Cell style={{ backgroundColor: 'initial' }} colSpan={2}>
+          <div style={{ marginTop: 20 }}>{control}</div>
         </Table.Cell>
       </Table.Row>
     )
+  }
 
-    const rows = _.map(this.fields, (f, name) => {
-      const {
-        type,
-        label,
-        placeholder,
-        options,
-        content,
-        displayIf,
-        inputLabel,
-        help,
-        mask,
-      } = f
+  renderDefaultRow(fieldInfo, control, args) {
+    const { helpState } = this.state
+    const { inputsOnly } = this.props
+    const { name, label, help } = fieldInfo
+    return (
+      <React.Fragment>
+        {inputsOnly && (
+          <React.Fragment>
+            {control}
+            {this.hasFieldError(args) && (
+              <div style={{ color: 'red' }}>{this.fieldErrorMessage(name)}</div>
+            )}
+          </React.Fragment>
+        )}
+        {!inputsOnly && (
+          <Table.Row>
+            <Table.Cell collapsing>
+              {label(args)}{' '}
+              {help(args) && (
+                <Icon
+                  circular
+                  link
+                  size="mini"
+                  name="help"
+                  inverted={helpState[name] || false}
+                  style={{ position: 'relative', top: -3 }}
+                  onClick={() => this.handleHelp(name)}
+                />
+              )}
+            </Table.Cell>
+            <Table.Cell>
+              {control}
+              {helpState[name] && <Label pointing>{help(args)}</Label>}
+              {this.hasFieldError(args) && (
+                <div style={{ color: 'red' }}>
+                  {this.fieldErrorMessage(name)}
+                </div>
+              )}
+            </Table.Cell>
+          </Table.Row>
+        )}
+      </React.Fragment>
+    )
+  }
+
+  buildFormRows() {
+    const { input } = this.state
+    const { context } = this.props
+
+    return _.map(this.fields, (f, name) => {
+      const { type, displayIf } = f
       let control = null
       const args = { form: input, context, fieldInfo: f, value: input[name] }
+      if (!displayIf(args)) return null
       const resolvedType = type(args)
       switch (resolvedType) {
         case 'Text':
-          control = (
-            <Input
-              error={this.hasFieldError(args)}
-              label={inputLabel(args) || null}
-              style={{ width: '100%' }}
-              onBlur={this.handleBlur(args)}
-              input={
-                <MaskedInput
-                  mask={mask(args)}
-                  value={input[name]}
-                  placeholder={placeholder(args)}
-                  showMask={mask(args) !== false}
-                  onChange={event =>
-                    this.handleChange(args)(event, {
-                      value: event.target.value,
-                    })
-                  }
-                />
-              }
-            />
-          )
+          control = this.textField(f, args)
           break
         case 'Dropdown':
-          control = (
-            <Dropdown
-              error={this.hasFieldError(args)}
-              fluid
-              selection
-              options={options(args)}
-              defaultValue={input[name]}
-              onChange={this.handleChangeAndBlur(args)}
-              style={{ width: '100%' }}
-              label={inputLabel(args) || null}
-            />
-          )
+          control = this.dropdownField(f, args)
           break
         case 'Checklist':
-          control = (
-            <Checklist
-              error={this.hasFieldError(args)}
-              options={options(args)}
-              defaultValues={input[name]}
-              onChange={this.handleChangeAndBlur(args)}
-            />
-          )
+          control = this.checklistField(f, args)
           break
         case 'Toggle':
-          control = (
-            <Checkbox
-              toggle
-              defaultChecked={input[name]}
-              onChange={this.handleChangeAndBlur(args, 'checked')}
-            />
-          )
+          control = this.toggleField(f, args)
           break
         case 'Section':
-          control = <Header h={3}>{label(args)}</Header>
+          control = this.sectionField(f, args)
           break
         case 'Div':
-          control = content(args)
+          control = this.divField(f, args)
           break
         default:
           control = <div>Type {type} invalid</div>
           break
       }
-      if (!displayIf(args)) return null
       switch (resolvedType) {
         case 'Section':
-          return (
-            <Table.Row key={name}>
-              <Table.Cell style={{ backgroundColor: 'initial' }} colSpan={2}>
-                <div style={{ marginTop: 20 }}>{control}</div>
-              </Table.Cell>
-            </Table.Row>
-          )
+          return this.renderSectionRow(f, control, args)
         default:
-          return (
-            <Table.Row key={name}>
-              <Table.Cell collapsing>
-                {label(args)}{' '}
-                {help(args) && (
-                  <Icon
-                    circular
-                    link
-                    size="mini"
-                    name="help"
-                    inverted={helpState[name] || false}
-                    style={{ position: 'relative', top: -3 }}
-                    onClick={() => this.handleHelp(name)}
-                  />
-                )}
-              </Table.Cell>
-              <Table.Cell>
-                {control}
-                {helpState[name] && <Label pointing>{help(args)}</Label>}
-                {this.hasFieldError(args) && (
-                  <div style={{ color: 'red' }}>
-                    {this.fieldErrorMessage(name)}
-                  </div>
-                )}
-              </Table.Cell>
-            </Table.Row>
-          )
+          return this.renderDefaultRow(f, control, args)
       }
     })
+  }
+
+  renderLoaded() {
+    const save = this.asyncState('save')
+    const { inputsOnly, submittedMessage, submittingMessage } = this.props
+
+    const saveButtons = this.saveButtons()
+
+    const rows = this.buildFormRows()
 
     return (
-      <div>
-        {save.isLoaded && <Message success>Saved</Message>}
-        {save.isLoading && <Message>Saving</Message>}
+      <React.Fragment>
+        {save.isLoaded && <Message success>{submittedMessage}</Message>}
+        {save.isLoading && <Message>{submittingMessage}</Message>}
         {save.error && (
           <Message error>
-            Please correct the errors below and try again.
+            {this.fieldErrorMessage('*') ||
+              'Please correct the errors below and try again.'}
           </Message>
         )}
-        <Table definition>
-          <Table.Body>
-            {rows}
-            {saveButton}
-          </Table.Body>
-        </Table>
-      </div>
+        {inputsOnly && (
+          <React.Fragment>
+            {_.map(rows, (r, idx) => (
+              <div key={idx} style={{ marginBottom: 5 }}>
+                {r}
+              </div>
+            ))}
+            {saveButtons}
+          </React.Fragment>
+        )}
+        {!inputsOnly && (
+          <Table definition>
+            <Table.Body>
+              {rows}
+              <Table.Row>
+                <Table.Cell>{saveButtons}</Table.Cell>
+                <Table.Cell style={{ textAlign: 'right' }} />
+              </Table.Row>
+            </Table.Body>
+          </Table>
+        )}
+      </React.Fragment>
     )
   }
 }
 
 Form.defaultProps = {
   onChange: () => {},
-  onSave: () => {},
+  onSubmit: () => {},
   onCancel: null,
   onValid: () => {},
   onInvalid: () => {},
+  saveButtonText: 'Save',
+  saveButtonIcon: null,
+  cancelButtonText: 'Cancel',
+  inputsOnly: false,
+  submittingMessage: 'Saving...',
+  submittedMessage: 'Saved.',
 }
 
 export * from './formFuncs'

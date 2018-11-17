@@ -2,16 +2,12 @@ import React, { Component } from 'react'
 import { Container, Card } from 'semantic-ui-react'
 import { ComponentBase } from '~/Kit'
 import { Api } from '~/Api'
+import { connect } from '~/store'
 
-class Dashboard extends ComponentBase {
-  loadState() {
-    return {
-      user: Api.getCurrentUser(),
-      title: 'Dashboard',
-    }
-  }
-
-  renderLoaded({ user }) {
+@connect(({ user }) => ({ user }))
+class Dashboard extends Component {
+  render() {
+    const { user } = this.props
     return (
       <Container style={{ marginTop: 10 }}>
         <Card>

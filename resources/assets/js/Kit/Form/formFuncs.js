@@ -6,6 +6,16 @@ function textField(config = {}) {
   return { ...config }
 }
 
+function passwordField(config = {}) {
+  return {
+    params: () => {
+      return { type: 'password' }
+    },
+    icon: () => 'key',
+    ...config,
+  }
+}
+
 function integerField(config = {}) {
   const min = config.min || 0
   const max = config.max || 0
@@ -95,12 +105,14 @@ function emailField(config = {}) {
     mask: emailMask,
     validate: ({ value }) => {
       if (!value) return true
-      return (
+      const isValid =
         value.match(
           /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
         ) !== null
-      )
+      if (!isValid) return 'That does not appear to be an email address.'
+      return true
     },
+    icon: () => 'at',
     ...config,
   })
 }
@@ -166,4 +178,5 @@ export {
   integerField,
   createMask,
   checklistField,
+  passwordField,
 }

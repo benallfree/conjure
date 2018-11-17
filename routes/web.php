@@ -11,11 +11,6 @@
 |
  */
 
-Auth::routes();
-
-Route::get('/home', 'HomeController@index')->name('home');
-
 Route::any('/{any}', function () {
-
-  return view('welcome');
+  return view('react');
 })->where('any', '.*');

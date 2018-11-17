@@ -6,13 +6,16 @@ import { Async } from './Async'
 class ComponentBase extends Component {
   constructor(props) {
     super(props)
+    this.state = {}
+    this.watchKeys = []
+    this.privateIsMounted = false
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
     if (this.props.location && this.props.match) {
       const values = queryString.parse(this.props.location.search)
       _.merge(this.props.match.params, values)
     }
-    this.state = {}
-    this.watchKeys = []
-    this.privateIsMounted = false
   }
 
   componentWillUnmount() {

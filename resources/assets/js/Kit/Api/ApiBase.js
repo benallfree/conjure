@@ -2,6 +2,7 @@ import _ from 'lodash'
 import moment from 'moment'
 import { ApiError } from './ApiError'
 import { BusinessRuleError } from './BusinessRuleError'
+import { User } from '~/Kit'
 
 class ApiBase {
   route(path, args = {}) {
@@ -71,6 +72,19 @@ class ApiBase {
   async ping() {
     const response = await this.get(route('api.ping'))
     return response
+  }
+
+  async login(email, password) {
+    const data = await this.post(route('api.login'), {
+      email,
+      password,
+    })
+    return new User(data)
+  }
+
+  async logout() {
+    await this.post(route('api.logout'))
+    return null
   }
 }
 

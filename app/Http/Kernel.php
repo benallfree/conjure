@@ -40,8 +40,12 @@ class Kernel extends HttpKernel
     ],
 
     'api' => [
+      \App\Http\Middleware\EncryptCookies::class,
+      \Illuminate\Session\Middleware\StartSession::class,
+      \Laravel\Passport\Http\Middleware\CreateFreshApiToken::class,
       'throttle:6000,1',
       'bindings',
+
     ],
   ];
 

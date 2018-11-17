@@ -1,0 +1,14 @@
+.ui.checkbox.error .box:before,
+.ui.checkbox.error label:before,
+.ui.checkbox.error input:checked ~ .box:before,
+.ui.checkbox.error input:checked ~ label:before,
+.ui.checkbox.error input:not([type='radio']):indeterminate:focus ~ .box:before,
+.ui.checkbox.error input:not([type='radio']):indeterminate:focus ~ label:before,
+.ui.checkbox.error .box:hover::before,
+.ui.checkbox.error label:hover::before,
+.ui.checkbox.error input:checked:focus ~ .box:before,
+.ui.checkbox.error input:checked:focus ~ label:before,
+.ui.checkbox.error .box:active::before,
+.ui.checkbox.error label:active::before {
+  background-color: #e0b4b4;
+}

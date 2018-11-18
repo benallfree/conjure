@@ -1,5 +1,6 @@
 import { Dashboard } from './components/Dashboard'
 import { Ping } from './components/Ping'
+import { ProtectedPing } from './components/ProtectedPing'
 import { Route } from './Kit/Route'
 import { Login } from './Kit/Login'
 import { Logout } from './Kit/Logout'
@@ -11,7 +12,7 @@ function isLoggedOut({ user }) {
   return !isLoggedIn({ user })
 }
 
-const routes = Route([
+const { routes, interpolator } = Route([
   {
     path: 'dashboard',
     as: 'dashboard',
@@ -62,15 +63,17 @@ const routes = Route([
     component: Logout,
   },
   {
-    path: 'protected',
-    as: 'protected',
+    path: 'protected/ping',
+    as: 'protected.ping',
     menu: {
-      title: 'Protected',
+      title: 'Secure Ping',
       middleware: [isLoggedIn],
     },
-    component: () => 'Protected Content',
+    component: ProtectedPing,
     middleware: [isLoggedIn],
   },
 ])
 
-export { routes }
+console.error({ routes, interpolator })
+
+export { routes, interpolator as path }

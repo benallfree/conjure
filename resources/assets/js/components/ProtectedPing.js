@@ -1,12 +1,12 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { Container, Button, Message } from 'semantic-ui-react'
 import _ from 'lodash'
-import { ComponentBase } from '~/Kit'
+import { ComponentBase, Async } from '~/Kit'
 
-class Ping extends ComponentBase {
+class ProtectedPing extends ComponentBase {
   handlePing = i => {
     this.setState({
-      [i]: this.api.ping(),
+      [i]: this.api.protectedPing(),
     })
   }
 
@@ -31,4 +31,4 @@ class Ping extends ComponentBase {
   }
 }
 
-export { Ping }
+export { ProtectedPing }

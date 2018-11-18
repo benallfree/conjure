@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "39e5ee9b04851b919ab38e676afb5bb0",
+    "content-hash": "08e7310c8630869912a7dfc6baad383b",
     "packages": [
         {
             "name": "cache/adapter-common",
@@ -1181,16 +1181,16 @@
         },
         {
             "name": "laravel/passport",
-            "version": "v7.0.3",
+            "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/laravel/passport.git",
-                "reference": "404b345775c91cd04443e77e8d6164b9727a3448"
+                "url": "https://github.com/benallfree/passport.git",
+                "reference": "1bf973ed03e5ef92cb21abf1709d5bbb2f7cd586"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/passport/zipball/404b345775c91cd04443e77e8d6164b9727a3448",
-                "reference": "404b345775c91cd04443e77e8d6164b9727a3448",
+                "url": "https://api.github.com/repos/benallfree/passport/zipball/1bf973ed03e5ef92cb21abf1709d5bbb2f7cd586",
+                "reference": "1bf973ed03e5ef92cb21abf1709d5bbb2f7cd586",
                 "shasum": ""
             },
             "require": {
@@ -1217,7 +1217,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "6.0-dev"
+                    "dev-master": "8.0-dev"
                 },
                 "laravel": {
                     "providers": [
@@ -1230,7 +1230,6 @@
                     "Laravel\\Passport\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1246,7 +1245,11 @@
                 "oauth",
                 "passport"
             ],
-            "time": "2018-10-22T14:47:22+00:00"
+            "support": {
+                "issues": "https://github.com/laravel/passport/issues",
+                "source": "https://github.com/laravel/passport"
+            },
+            "time": "2018-11-18T18:27:41+00:00"
         },
         {
             "name": "laravel/tinker",
@@ -5399,6 +5402,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "laravel/passport": 20,
         "ngoctp/laravel-query-logger": 20,
         "swayok/alternative-laravel-cache": 20
     },

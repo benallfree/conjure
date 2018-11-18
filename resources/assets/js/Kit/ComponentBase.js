@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import _ from 'lodash'
 import queryString from 'query-string'
 import { Async } from './Async'
+import { Api } from '~/Api'
 
 class ComponentBase extends Component {
   constructor(props) {
@@ -9,6 +10,14 @@ class ComponentBase extends Component {
     this.state = {}
     this.watchKeys = []
     this.privateIsMounted = false
+    this.api = new Proxy(Api, {
+      get: (target, propKey, receiver) => {
+        return (...args) => {
+          const { history, match } = this.props
+          return target[propKey](...args, { history, match })
+        }
+      },
+    })
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {

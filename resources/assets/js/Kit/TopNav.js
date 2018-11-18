@@ -28,7 +28,7 @@ class TopNav extends Component {
       return (
         <Menu.Item
           as={Link}
-          to={route()}
+          to={route.path}
           key={path}
           name={title}
           active={activeItem === path}

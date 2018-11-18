@@ -21,7 +21,8 @@ class AppServiceProvider extends ServiceProvider
 
     $this->registerPolicies();
 
-    Passport::routes();
+    Passport::ignoreCsrfToken();
+
   }
 
   protected $policies = [

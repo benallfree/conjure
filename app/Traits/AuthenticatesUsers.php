@@ -5,6 +5,7 @@ namespace App\Traits;
 use App\Serializers\UserSerializer;
 use Illuminate\Foundation\Auth\AuthenticatesUsers as AuthenticatesUsersBase;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 trait AuthenticatesUsers
 {
@@ -22,14 +23,17 @@ trait AuthenticatesUsers
     $this->clearLoginAttempts($request);
 
     $u = $this->guard()->user();
-    return $this->authenticated($request, $u)
-    ? [
-      'status' => 'error',
-      'messages' => 'Login failed',
-    ] : [
-      'status' => 'ok',
-      'data' => UserSerializer::serialize($u),
-    ];
+    if ($this->authenticated($request, $u)) {
+      return [
+        'status' => 'error',
+        'messages' => 'Login failed',
+      ];
+    }
+    return (new Response(
+      [
+        'status' => 'ok',
+        'data' => UserSerializer::serialize($u),
+      ]))->withCookie($this->cookieFactory->make($u->getKey(), $request->session()->token()));
   }
 
   protected function sendLockoutResponse(Request $request)

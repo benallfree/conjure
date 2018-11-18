@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
 import { Card } from 'semantic-ui-react'
-import { ComponentBase, Api, Form, emailField, passwordField } from '~/Kit'
+import { ComponentBase, Form, emailField, passwordField } from '~/Kit'
 import changeCase from 'change-case'
 import { actions, connect } from '~/store'
-import { routes } from '~/routes'
+import { path } from '~/routes'
 
 class Login extends ComponentBase {
   constructor(props) {
@@ -14,19 +14,17 @@ class Login extends ComponentBase {
     }
   }
 
-  componentDidMount() {
-    super.componentDidMount()
-    const { user } = this.props
-    if (user.id) {
-      window.location = '/'
+  loadState() {
+    return {
+      user: this.api.getCurrentUser(),
     }
   }
 
   handleLogin = form => {
     const { history, match } = this.props
-    return Api.login(form.email, form.password).then(user => {
+    return this.api.login(form.email, form.password).then(user => {
       actions.setUser(user)
-      history.replace(match.params.r || routes.home())
+      history.replace(match.params.r || path.home())
       actions.setGlobalMessage(`Welcome back, ${changeCase.title(user.name)}`)
     })
   }

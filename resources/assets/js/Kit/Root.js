@@ -1,10 +1,10 @@
 import React, { Component } from 'react'
-import { BrowserRouter as Router, Route } from 'react-router-dom'
+import { BrowserRouter, Route } from 'react-router-dom'
 import _ from 'lodash'
-import { Transition, Message, Container } from 'semantic-ui-react'
+import { Message, Container } from 'semantic-ui-react'
 import { routes } from '~/routes'
 import { TopNav } from './TopNav'
-import { ComponentBase, Api } from '~/Kit'
+import { ComponentBase } from './ComponentBase'
 import { Provider, actions, connect } from '~/store'
 
 class NavWatcher extends Component {
@@ -27,7 +27,7 @@ class NavWatcher extends Component {
 class Loader extends ComponentBase {
   loadState() {
     return {
-      user: Api.getCurrentUser().then(user => {
+      user: this.api.getCurrentUser().then(user => {
         actions.setUser(user)
       }),
     }
@@ -36,18 +36,23 @@ class Loader extends ComponentBase {
   renderLoaded() {
     const { message } = this.props
     return (
-      <Router>
+      <BrowserRouter>
         <React.Fragment>
           <Route path="*" component={TopNav} />
           <Route path="*" component={NavWatcher} />
           <Container fluid>
             {message && <Message info>{message}</Message>}
-            {_.map(routes, r => (
-              <Route exact key={r.path} path={r.path} component={r.component} />
+            {_.map(routes, (r, idx) => (
+              <Route
+                exact
+                key={`${idx}`}
+                path={r.path}
+                component={r.component}
+              />
             ))}
           </Container>
         </React.Fragment>
-      </Router>
+      </BrowserRouter>
     )
   }
 }

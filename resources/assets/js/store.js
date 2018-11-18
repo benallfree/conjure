@@ -1,6 +1,5 @@
 import createStore from 'react-waterfall'
-import { User } from '~/Kit'
-import { Promise } from 'core-js'
+import { User } from '~/Models'
 
 const config = {
   initialState: {

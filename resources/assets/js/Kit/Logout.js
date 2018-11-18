@@ -1,15 +1,14 @@
-import React, { Component } from 'react'
-import { ComponentBase, Api } from '~/Kit'
+import { ComponentBase } from '~/Kit'
 import { actions } from '~/store'
-import { routes } from '~/routes'
+import { path } from '~/routes'
 import { User } from '~/Models'
 
 class Logout extends ComponentBase {
   componentDidMount() {
     super.componentDidMount()
     const { history } = this.props
-    Api.logout().then(() => {
-      history.replace(routes.home())
+    this.api.logout().then(() => {
+      history.replace(path.home())
       actions.setUser(new User())
       actions.setGlobalMessage(`Logged out.`)
     })

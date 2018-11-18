@@ -2,7 +2,6 @@ import _ from 'lodash'
 import moment from 'moment'
 import { ApiError } from './ApiError'
 import { BusinessRuleError } from './BusinessRuleError'
-import { User } from '~/Kit'
 
 class ApiBase {
   route(path, args = {}) {
@@ -17,15 +16,15 @@ class ApiBase {
     return route(path, finalArgs)
   }
 
-  get(url) {
-    return this.axios({ method: 'get', url })
+  get(url, context = {}) {
+    return this.axios({ method: 'get', url }, context)
   }
 
-  post(url, data) {
-    return this.axios({ method: 'post', url, data })
+  post(url, data, context = {}) {
+    return this.axios({ method: 'post', url, data }, context)
   }
 
-  async axios(config) {
+  async axios(config, context = {}) {
     try {
       console.log('API Request', config)
       const response = await axios(config)
@@ -53,8 +52,8 @@ class ApiBase {
         e.response.data.message === 'Unauthenticated.'
       ) {
         if (this.onNeedsAuthentication) {
-          await this.onNeedsAuthentication()
-          return this.axios(config)
+          this.onNeedsAuthentication(context)
+          throw new ApiError('Unauthenticated.')
         }
         throw new ApiError(
           'Unauthenticated and no onNeedsAuthentication handler defined.',
@@ -67,24 +66,6 @@ class ApiBase {
       console.error(msg)
       throw new ApiError(`API ERROR: ${msg}`)
     }
-  }
-
-  async ping() {
-    const response = await this.get(route('api.ping'))
-    return response
-  }
-
-  async login(email, password) {
-    const data = await this.post(route('api.login'), {
-      email,
-      password,
-    })
-    return new User(data)
-  }
-
-  async logout() {
-    await this.post(route('api.logout'))
-    return null
   }
 }
 

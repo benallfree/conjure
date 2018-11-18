@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { Container, Card } from 'semantic-ui-react'
-import { ComponentBase } from '~/Kit'
-import { Api } from '~/Api'
+import { path } from '~/routes'
 import { connect } from '~/store'
 
 @connect(({ user }) => ({ user }))
@@ -21,6 +20,7 @@ class Dashboard extends Component {
             </Card.Description>
           </Card.Content>
         </Card>
+        {path.dashboard.test({ client: 42 })}
       </Container>
     )
   }

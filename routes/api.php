@@ -16,4 +16,13 @@ Route::group(['prefix' => 'v1', 'as' => 'api.'], function () {
       'data' => 'pong',
     ];
   }]);
+
+  Route::group(['as' => 'auth.', 'prefix' => 'auth', 'middleware' => ['auth:api']], function () {
+    Route::get('ping', ['as' => 'ping', 'uses' => function () {
+      return [
+        'status' => 'ok',
+        'data' => 'pong',
+      ];
+    }]);
+  });
 });

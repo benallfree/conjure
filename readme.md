@@ -4,7 +4,7 @@ Laravel Conjure is a complete Laravel frontend and backend setup, ready to creat
 
 Out of the box, Conjure has:
 
-- Authentication (Passport)
+- Authentication
 - Versioned API routing
 - Traditional page routing
 - React
@@ -29,7 +29,6 @@ composer install
 yarn
 ./artisan key:generate
 ./artisan migrate
-./artisan passport:install
 ```
 
 ## Usage Guide

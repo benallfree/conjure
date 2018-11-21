@@ -33,7 +33,7 @@ trait AuthenticatesUsers
       [
         'status' => 'ok',
         'data' => UserSerializer::serialize($u),
-      ]))->withCookie($this->cookieFactory->make($u->getKey(), $request->session()->token()));
+      ]));
   }
 
   protected function sendLockoutResponse(Request $request)

@@ -34,16 +34,10 @@ class Kernel extends HttpKernel
       // \Illuminate\Session\Middleware\AuthenticateSession::class,
       \Illuminate\View\Middleware\ShareErrorsFromSession::class,
       \Illuminate\Routing\Middleware\SubstituteBindings::class,
-      \Laravel\Passport\Http\Middleware\CreateFreshApiToken::class,
 
     ],
 
     'api' => [
-      \App\Http\Middleware\EncryptCookies::class,
-      \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-      \Illuminate\Session\Middleware\StartSession::class,
-      // \App\Http\Middleware\VerifyCsrfToken::class,
-      \Laravel\Passport\Http\Middleware\CreateFreshApiToken::class,
       'throttle:6000,1',
       'bindings',
     ],

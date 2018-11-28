@@ -17,7 +17,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.'], function () {
     ];
   }]);
 
-  Route::group(['middleware' => ['auth'], function () {
+  Route::group(['middleware' => ['auth']], function () {
 
     Route::group(['as' => 'auth.', 'prefix' => 'auth', 'middleware' => ['auth']], function () {
       Route::get('ping', ['as' => 'ping', 'uses' => function () {
@@ -27,7 +27,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.'], function () {
         ];
       }]);
     });
-  }]);
+  });
 });
 
 Route::any('/{any}', function () {

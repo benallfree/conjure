@@ -1,8 +1,11 @@
 import React, { Component } from 'react'
 import { Container, Button, Message } from 'semantic-ui-react'
 import _ from 'lodash'
-import { ComponentBase, Async } from '~/Kit'
+import { subscribe } from 'react-contextual'
+import { ComponentBase, ensureLoggedIn } from '~/Kit'
 
+@subscribe('ioc')
+@ensureLoggedIn({ redirect: true })
 class ProtectedPing extends ComponentBase {
   handlePing = i => {
     this.setState({

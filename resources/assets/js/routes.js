@@ -1,4 +1,3 @@
-import React from 'react'
 import _ from 'lodash'
 import changeCase from 'change-case'
 import { Route, Login, Logout, ensureLoggedIn, ensureLoggedOut } from '~/Kit'

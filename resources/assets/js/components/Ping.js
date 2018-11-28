@@ -1,8 +1,10 @@
 import React from 'react'
 import { Container, Button, Message } from 'semantic-ui-react'
 import _ from 'lodash'
+import { subscribe } from 'react-contextual'
 import { ComponentBase } from '~/Kit'
 
+@subscribe('ioc')
 class Ping extends ComponentBase {
   handlePing = i => {
     this.setState({

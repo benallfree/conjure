@@ -32,14 +32,7 @@ class Root extends ComponentBase {
           <Route path="*" component={NavWatcher} />
           <Container fluid>
             {message && <Message info>{message}</Message>}
-            {_.map(routes, (r, idx) => (
-              <Route
-                exact
-                key={`${idx}`}
-                path={r.path}
-                component={r.component}
-              />
-            ))}
+            <RouteRenderer routes={routes} />
           </Container>
         </React.Fragment>
       </BrowserRouter>

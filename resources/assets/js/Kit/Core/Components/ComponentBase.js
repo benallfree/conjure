@@ -12,8 +12,8 @@ class ComponentBase extends Component {
     this.api = new Proxy(props.ioc.Api, {
       get: (target, propKey, receiver) => {
         return (...args) => {
-          const { history, match } = this.props
-          return target[propKey](...args, { history, match })
+          const { history, match, ioc } = this.props
+          return target[propKey](...args, { ioc, history, match })
         }
       },
     })

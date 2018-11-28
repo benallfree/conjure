@@ -1,10 +1,10 @@
 import React, { Component } from 'react'
 import { Card } from 'semantic-ui-react'
-import { ComponentBase, Form, emailField, passwordField } from '~/Kit'
 import changeCase from 'change-case'
-import { actions, connect } from '~/store'
-import { path } from '~/routes'
+import { subscribe } from 'react-contextual'
+import { ComponentBase, Form, emailField, passwordField } from '..'
 
+@subscribe('ioc')
 class Login extends ComponentBase {
   constructor(props) {
     super(props)
@@ -22,10 +22,12 @@ class Login extends ComponentBase {
 
   handleLogin = form => {
     const { history, match } = this.props
+    const { setUser, setGlobalMessage, routes } = this.props.ioc
+
     return this.api.login(form.email, form.password).then(user => {
-      actions.setUser(user)
-      history.replace(match.params.r || path.home())
-      actions.setGlobalMessage(`Welcome back, ${changeCase.title(user.name)}`)
+      setUser(user)
+      history.replace(match.params.r || routes.home())
+      setGlobalMessage(`Welcome back, ${changeCase.title(user.name)}`)
     })
   }
 

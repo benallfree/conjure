@@ -2,43 +2,33 @@ import React, { Component } from 'react'
 import { BrowserRouter, Route } from 'react-router-dom'
 import _ from 'lodash'
 import { Message, Container } from 'semantic-ui-react'
-import { routes } from '~/routes'
-import { TopNav } from './TopNav'
-import { ComponentBase } from './ComponentBase'
-import { Provider, actions, connect } from '~/store'
+import { subscribe } from 'react-contextual'
+import { TopNav, ComponentBase, RouteRenderer, NavWatcher } from './Core'
 
-class NavWatcher extends Component {
-  componentDidUpdate(prevProps) {
-    if (this.props.location !== prevProps.location) {
-      this.onRouteChanged()
-    }
-  }
-
-  onRouteChanged() {
-    actions.setGlobalMessage('')
-  }
-
-  render() {
-    return null
-  }
-}
-
-@connect(({ message, user }) => ({ message }))
-class Loader extends ComponentBase {
+@subscribe('ioc')
+class Root extends ComponentBase {
   loadState() {
+    const {
+      ioc: { setUser },
+    } = this.props
     return {
       user: this.api.getCurrentUser().then(user => {
-        actions.setUser(user)
+        setUser(user)
       }),
     }
   }
 
   renderLoaded() {
-    const { message } = this.props
+    const {
+      ioc: { routes, message },
+    } = this.props
     return (
       <BrowserRouter>
         <React.Fragment>
-          <Route path="*" component={TopNav} />
+          <Route
+            path="*"
+            render={props => <TopNav routes={routes} {...props} />}
+          />
           <Route path="*" component={NavWatcher} />
           <Container fluid>
             {message && <Message info>{message}</Message>}
@@ -53,16 +43,6 @@ class Loader extends ComponentBase {
           </Container>
         </React.Fragment>
       </BrowserRouter>
-    )
-  }
-}
-
-class Root extends Component {
-  render() {
-    return (
-      <Provider>
-        <Loader />
-      </Provider>
     )
   }
 }

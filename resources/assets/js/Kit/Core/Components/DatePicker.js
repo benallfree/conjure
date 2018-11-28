@@ -10,11 +10,11 @@ const DATE_FORMAT = 'M/D/YY'
 const OPTIONS = {
   '7day': {
     label: '7 days',
-    start: moment().subtract('days', 7),
+    start: moment().subtract(7, 'days'),
   },
   '30day': {
     label: '30 days',
-    start: moment().subtract('days', 30),
+    start: moment().subtract(30, 'days'),
   },
   thisMonth: {
     label: 'This Month',
@@ -23,32 +23,32 @@ const OPTIONS = {
   lastMonth: {
     label: 'Last Month',
     start: moment()
-      .subtract('month', 1)
+      .subtract(1, 'month')
       .startOf('month'),
     end: moment()
-      .subtract('month', 1)
+      .subtract(1, 'month')
       .endOf('month'),
   },
   prevMonth: {
     label: 'Previous Month',
     start: moment()
-      .subtract('month', 2)
+      .subtract(2, 'month')
       .startOf('month'),
     end: moment()
-      .subtract('month', 2)
+      .subtract(2, 'month')
       .endOf('month'),
   },
   last6Month: {
     label: 'Last 6 Months',
-    start: moment().subtract('month', 6),
+    start: moment().subtract(6, 'month'),
   },
   lastYear: {
     label: 'Last Year',
     start: moment()
-      .subtract('year', 1)
+      .subtract(1, 'year')
       .startOf('year'),
     end: moment()
-      .subtract('year', 1)
+      .subtract(1, 'year')
       .endOf('year'),
   },
   custom: {

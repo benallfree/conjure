@@ -13,11 +13,13 @@ import {
   List,
 } from 'semantic-ui-react'
 import changeCase, { paramCase } from 'change-case'
+import { subscribe } from 'react-contextual'
 import MaskedInput from 'react-text-mask'
+import { Checklist } from './Checklist'
 import { createMask } from './formFuncs'
 import { ComponentBase } from '../ComponentBase'
-import { Checklist } from './Checklist'
 
+@subscribe('ioc')
 class Form extends ComponentBase {
   loadState() {
     const input = {}

@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import _ from 'lodash'
 import queryString from 'query-string'
 import { Async } from './Async'
-import { Api } from '~/Api'
 
 class ComponentBase extends Component {
   constructor(props) {
@@ -10,7 +9,7 @@ class ComponentBase extends Component {
     this.state = {}
     this.watchKeys = []
     this.privateIsMounted = false
-    this.api = new Proxy(Api, {
+    this.api = new Proxy(props.ioc.Api, {
       get: (target, propKey, receiver) => {
         return (...args) => {
           const { history, match } = this.props
@@ -96,7 +95,7 @@ class ComponentBase extends Component {
   renderLoaded(data) {
     return (
       <div>
-        Default resolver component. Override this.
+        Default resolver component. Override this. {this.name}
         <div>
           <code>{JSON.stringify(data, null, 2)}</code>
         </div>

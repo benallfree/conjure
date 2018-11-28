@@ -2,7 +2,9 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import './bootstrap'
 import { AppContainer } from 'react-hot-loader'
+import { Provider } from '~/react-contextual'
 import { Root } from './Root'
+import { services } from '~/services'
 import '@fortawesome/fontawesome-free/css/all.css'
 import 'semantic-ui-css/semantic.min.css'
 
@@ -13,7 +15,9 @@ const id = setInterval(() => {
     const render = Component => {
       ReactDOM.render(
         <AppContainer>
-          <Component />
+          <Provider {...services}>
+            <Component />
+          </Provider>
         </AppContainer>,
         document.getElementById('react-root'),
       )

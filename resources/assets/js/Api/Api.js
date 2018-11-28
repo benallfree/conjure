@@ -1,11 +1,10 @@
+import _ from 'lodash'
 import { User } from '~/Models'
-import { ApiBase } from '~/Kit/Api'
-import { path } from '~/routes'
+import { ApiBase } from '~/Kit'
 
 class Api extends ApiBase {
-  async onNeedsAuthentication({ history, match }) {
-    console.error({ history, match })
-    history.replace(path.login({ r: match.url }))
+  async onNeedsAuthentication({ ioc: { routes }, history, match }) {
+    history.replace(routes.login({ r: match.url }))
   }
 
   async getCurrentUser(context) {
@@ -40,8 +39,6 @@ class Api extends ApiBase {
     await this.post(route('api.logout'), context)
     return null
   }
-
-  tesy = 42
 }
 
 const obj = new Api()

@@ -1,16 +1,5 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
- */
-
 Route::group(['prefix' => 'v1', 'as' => 'api.'], function () {
   // Auth
   Route::post('login', 'Auth\LoginController@login')->name('login');
@@ -28,14 +17,17 @@ Route::group(['prefix' => 'v1', 'as' => 'api.'], function () {
     ];
   }]);
 
-  Route::group(['as' => 'auth.', 'prefix' => 'auth', 'middleware' => ['auth']], function () {
-    Route::get('ping', ['as' => 'ping', 'uses' => function () {
-      return [
-        'status' => 'ok',
-        'data' => 'pong',
-      ];
-    }]);
-  });
+  Route::group(['middleware' => ['auth'], function () {
+
+    Route::group(['as' => 'auth.', 'prefix' => 'auth', 'middleware' => ['auth']], function () {
+      Route::get('ping', ['as' => 'ping', 'uses' => function () {
+        return [
+          'status' => 'ok',
+          'data' => 'pong',
+        ];
+      }]);
+    });
+  }]);
 });
 
 Route::any('/{any}', function () {

@@ -1,79 +1,63 @@
+import React from 'react'
+import _ from 'lodash'
+import changeCase from 'change-case'
+import { Route, Login, Logout, ensureLoggedIn, ensureLoggedOut } from '~/Kit'
 import { Dashboard } from './components/Dashboard'
 import { Ping } from './components/Ping'
 import { ProtectedPing } from './components/ProtectedPing'
-import { Route } from './Kit/Route'
-import { Login } from './Kit/Login'
-import { Logout } from './Kit/Logout'
 
-function isLoggedIn({ user }) {
-  return typeof user.id !== 'undefined'
-}
-function isLoggedOut({ user }) {
-  return !isLoggedIn({ user })
-}
+Route.middleware.push((k, routeInfo, parentRouteInfo) => {
+  if (!routeInfo.menu) return
+  _.defaults(routeInfo.menu, {
+    title: changeCase.title(k),
+    position: null,
+    icon: null,
+    decorators: [],
+  })
+})
 
-const { routes, interpolator } = Route([
-  {
-    path: 'dashboard',
-    as: 'dashboard',
+const routes = Route({
+  dashboard: {
     component: Dashboard,
-    menu: {
-      title: 'Dashboard',
-    },
-    routes: [
-      {
+    menu: {},
+    routes: {
+      test: {
         path: '/clients/:client/invoices',
-        as: 'test',
       },
-    ],
+    },
   },
-  {
+  home: {
     path: '',
-    as: 'home',
-    component: () => 'Home',
   },
-
-  {
-    path: 'ping',
-    as: 'ping',
-    menu: { title: 'Ping' },
+  ping: {
+    menu: {},
     component: Ping,
   },
-
-  {
-    path: 'login',
-    as: 'login',
+  login: {
     menu: {
       title: 'Log In',
       position: 'right',
       icon: 'sign in',
-      middleware: [isLoggedOut],
+      decorators: [ensureLoggedOut()],
     },
     component: Login,
   },
-  {
-    path: 'logout',
-    as: 'logout',
+  logout: {
     menu: {
       title: 'Log Out',
       position: 'right',
       icon: 'sign out',
-      middleware: [isLoggedIn],
+      decorators: [ensureLoggedIn()],
     },
     component: Logout,
   },
-  {
-    path: 'protected/ping',
-    as: 'protected.ping',
+  protectedPing: {
     menu: {
       title: 'Secure Ping',
-      middleware: [isLoggedIn],
+      decorators: [ensureLoggedIn()],
     },
     component: ProtectedPing,
-    middleware: [isLoggedIn],
   },
-])
+})
 
-console.error({ routes, interpolator })
-
-export { routes, interpolator as path }
+export { routes }

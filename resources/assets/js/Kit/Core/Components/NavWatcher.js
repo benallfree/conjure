@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { subscribe } from '~/react-contextual'
+import { subscribe } from 'react-contextual'
 
 @subscribe('ioc')
 class NavWatcher extends Component {

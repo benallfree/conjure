@@ -1,5 +1,5 @@
 import { ComponentBase } from '..'
-import { subscribe } from '~/react-contextual'
+import { subscribe } from 'react-contextual'
 
 @subscribe('ioc')
 class Logout extends ComponentBase {

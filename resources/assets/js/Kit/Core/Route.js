@@ -86,8 +86,6 @@ Route.middleware = [
       as: k,
       component: props => {
         const { route } = props
-        console.error('inside', { route })
-
         return <RouteRenderer {...props} routes={route.routes} />
       },
       decorators: [],

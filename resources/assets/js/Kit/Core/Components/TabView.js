@@ -14,7 +14,12 @@ const TabView = props => {
           const { decorators, title } = menu
           const MyButton = _.reduce(decorators, (c, d) => d(c), RouteButton)
           return (
-            <MyButton key={fullPath} to={route({ ...rest })} {...rest}>
+            <MyButton
+              key={fullPath}
+              to={route({ ...rest })}
+              {...rest}
+              route={route}
+            >
               {title}
             </MyButton>
           )

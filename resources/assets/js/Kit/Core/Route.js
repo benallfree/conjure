@@ -1,6 +1,7 @@
+import React from 'react'
 import _ from 'lodash'
 import querystring from 'query-string'
-import changeCase from 'change-case'
+import { RouteRenderer } from './Components'
 
 class RoutingError extends Error {}
 
@@ -63,13 +64,13 @@ function createInterpolator(routeInfo) {
   return interpolator
 }
 
-function traverseRoutes(parentRoute = {}, routes = {}) {
-  _.each(routes, (routeInfo, k) => {
-    _.each(Route.middleware, m => m(k, routeInfo, parentRoute))
-    parentRoute[k] = routes[k] = createInterpolator(routeInfo)
-    traverseRoutes(parentRoute[k], parentRoute[k].routes)
+function traverseRoutes(rootRoute = {}, childRoutes = {}) {
+  _.each(childRoutes, (routeInfo, k) => {
+    _.each(Route.middleware, m => m(k, routeInfo, rootRoute))
+    rootRoute[k] = childRoutes[k] = createInterpolator(routeInfo)
+    traverseRoutes(rootRoute[k], rootRoute[k].routes)
   })
-  return parentRoute
+  return rootRoute
 }
 
 function Route(routeConfig) {
@@ -83,7 +84,13 @@ Route.middleware = [
       routes: {},
       path: k,
       as: k,
-      component: () => `Placeholder for ${changeCase.title(k)}`,
+      component: props => {
+        const { route } = props
+        console.error('inside', { route })
+
+        return <RouteRenderer {...props} routes={route.routes} />
+      },
+      decorators: [],
     })
     _.merge(routeInfo, {
       fullPath: `/${_.compact([
@@ -91,6 +98,12 @@ Route.middleware = [
         _.trim(routeInfo.path, '/ '),
       ]).join('/')}`,
       routes: { ...routeInfo.routes, ...routeInfo.component.routes },
+      component: _.reduce(
+        routeInfo.decorators,
+        (c, d) => d(c),
+        routeInfo.component,
+      ),
+      parent: parentRouteInfo,
     })
   },
 ]

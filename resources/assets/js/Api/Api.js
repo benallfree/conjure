@@ -3,8 +3,11 @@ import { User } from '~/Models'
 import { ApiBase } from '~/Kit'
 
 class Api extends ApiBase {
-  async onNeedsAuthentication({ ioc: { routes }, history, match }) {
-    history.replace(routes.login({ r: match.url }))
+  async onNeedsAuthentication({ ioc: { routes }, history }) {
+    const {
+      location: { pathname, search },
+    } = window
+    history.replace(routes.login({ r: `${pathname}${search}` }))
   }
 
   async getCurrentUser(context) {

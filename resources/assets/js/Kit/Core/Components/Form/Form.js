@@ -544,8 +544,10 @@ class Form extends ComponentBase {
             <Table.Body>
               {rows}
               <Table.Row>
-                <Table.Cell>{saveButtons}</Table.Cell>
-                <Table.Cell style={{ textAlign: 'right' }} />
+                <Table.Cell />
+                <Table.Cell style={{ textAlign: 'right' }}>
+                  {saveButtons}
+                </Table.Cell>
               </Table.Row>
             </Table.Body>
           </Table>

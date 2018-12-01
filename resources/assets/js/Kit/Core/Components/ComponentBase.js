@@ -121,7 +121,18 @@ class ComponentBase extends Component {
       <Async
         watch={watches}
         onHeader={data => this.renderHeader(data)}
-        onLoaded={data => this.renderLoaded(data)}
+        onLoaded={data =>
+          this.renderLoaded(
+            {
+              ..._.reduce(this.state, (r, v, k) => {
+                if (_.find(this.watchKeys, wk => wk === k)) r[k] = v
+                return r
+              }),
+              ...data,
+            },
+            {},
+          )
+        }
       />
     )
   }

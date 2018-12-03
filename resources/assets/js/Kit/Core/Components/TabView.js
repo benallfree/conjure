@@ -5,27 +5,23 @@ import { RouteButton } from './RouteButton'
 import { RouteRenderer } from './RouteRenderer'
 
 const TabView = props => {
-  const { routes, ...rest } = props
+  const { route, buttonProps, ...rest } = props
+
   return (
     <div>
-      <Button.Group widths="5" style={{ marginBottom: 20 }}>
-        {_.map(routes, (route, k) => {
-          const { fullPath, menu } = route
+      <Button.Group style={{ marginBottom: 20 }} {...buttonProps}>
+        {_.map(route.routes, (r, k) => {
+          const { fullPath, menu } = r
           const { decorators, title } = menu
           const MyButton = _.reduce(decorators, (c, d) => d(c), RouteButton)
           return (
-            <MyButton
-              key={fullPath}
-              to={route({ ...rest })}
-              {...rest}
-              route={route}
-            >
+            <MyButton {...rest} key={fullPath} route={r}>
               {title}
             </MyButton>
           )
         })}
       </Button.Group>
-      <RouteRenderer routes={routes} {...rest} />
+      <RouteRenderer {...rest} routes={route.routes} />
     </div>
   )
 }

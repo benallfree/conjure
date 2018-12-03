@@ -3,7 +3,11 @@ import _ from 'lodash'
 import querystring from 'query-string'
 import { RouteRenderer } from './Components'
 
-class RoutingError extends Error {}
+class RoutingError extends Error {
+  constructor(msg, route) {
+    super(`${msg}\nas: ${route.as}\npath: ${route.fullPath}`)
+  }
+}
 
 function createInterpolator(routeInfo) {
   const used = {}
@@ -12,19 +16,14 @@ function createInterpolator(routeInfo) {
     const m = p.match(/^:(.+)/)
     if (!m) return p
     if (typeof params[m[1]] === 'undefined') {
-      throw new RoutingError(
-        `Parameter :${m[1]} not provided for route ${routeInfo.path} (${
-          routeInfo.as
-        })`,
-      )
+      throw new RoutingError(`Parameter :${m[1]} not provided`, routeInfo)
     }
     const v = params[m[1]]
     if (_.isObject(v)) {
       if (typeof v.id === 'undefined')
         throw new RoutingError(
-          `Parameter :${m[1]} must haven an 'id' attribute for route ${
-            routeInfo.path
-          } (${routeInfo.as})`,
+          `Parameter :${m[1]} must haven an 'id' attribute for route`,
+          routeInfo,
         )
       used[m[1]] = true
       return v.id
@@ -33,32 +32,44 @@ function createInterpolator(routeInfo) {
     return v
   }
 
-  const parts = _.trim(routeInfo.fullPath, '/').split('/')
-  const interpolator = (params = {}, includeQueryString = true) => {
+  const interpolator = (params = {}, options = {}) => {
+    const { includeQueryString, useDefaultChildPath } = _.defaults(options, {
+      includeQueryString: true,
+      useDefaultChildPath: true,
+    })
+    const defaultChild = _.find(interpolator.routes, r => r.default)
+    const fullPath =
+      useDefaultChildPath && defaultChild
+        ? defaultChild.fullPath
+        : routeInfo.fullPath
+    const parts = _.trim(fullPath, '/').split('/')
+
     let path = _.map(parts, p => `/${process(p, params)}`).join('')
-    if (includeQueryString) {
-      const qs = querystring.stringify(
-        _.reduce(
-          params,
-          (res, v, k) => {
-            if (used[k]) return res
-            res[k] = v
-            return res
-          },
-          {},
-        ),
-      )
-      if (qs.length > 0) path = `${path}?${qs}`
-    }
+
+    if (!includeQueryString) return path
+
+    const qs = querystring.stringify(
+      _.reduce(
+        params,
+        (res, v, k) => {
+          if (used[k]) return res
+          res[k] = v
+          return res
+        },
+        {},
+      ),
+    )
+    if (qs.length > 0) path = `${path}?${qs}`
     return path
   }
   _.merge(interpolator, routeInfo, {
     match: (props, path) => {
-      const l = _.keys(routeInfo.routes).length
-      return (
-        (l === 0 && path === routeInfo.fullPath) ||
-        (l > 0 && path.startsWith(interpolator(props, false)))
-      )
+      const src = interpolator(props, {
+        includeQueryString: false,
+        useDefaultChildPath: false,
+      })
+      const res = path.startsWith(src)
+      return res
     },
   })
   return interpolator
@@ -82,13 +93,17 @@ Route.middleware = [
   (k, routeInfo, parentRouteInfo) => {
     _.defaults(routeInfo, {
       routes: {},
-      path: k,
-      as: k,
+      path: null,
+      as: _.compact([parentRouteInfo.as, k]).join('.'),
+      default: false,
       component: props => {
         const { route } = props
         return <RouteRenderer {...props} routes={route.routes} />
       },
       decorators: [],
+    })
+    _.merge(routeInfo, {
+      path: _.compact([k, routeInfo.path]).join('/'),
     })
     _.merge(routeInfo, {
       fullPath: `/${_.compact([
@@ -103,6 +118,8 @@ Route.middleware = [
       ),
       parent: parentRouteInfo,
     })
+    if (routeInfo.path.length === 0)
+      throw new RoutingError(`Path cannot be empty`, routeInfo)
   },
 ]
 

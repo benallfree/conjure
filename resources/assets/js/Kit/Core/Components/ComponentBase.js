@@ -142,6 +142,18 @@ class ComponentBase extends Component {
     if (typeof this.state[k] === 'undefined') return Async.DEFAULT
     return this.state[k]
   }
+
+  setAsyncState(newSate) {
+    const finalState = _.reduce(
+      newSate,
+      (r, v, k) => {
+        r[k] = { ...this.asyncState(k), response: v }
+        return r
+      },
+      {},
+    )
+    this.setState(finalState)
+  }
 }
 
 export { ComponentBase }

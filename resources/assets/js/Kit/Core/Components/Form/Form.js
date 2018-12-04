@@ -262,8 +262,8 @@ class Form extends ComponentBase {
   }
 
   handleSave = () => {
-    const allValid = this.validateAll()
-    if (!allValid) return
+    if (!this.calcAllValid()) return
+
     const { input, fieldErrors, validState } = this.state
     const { onSubmit } = this.props
     this.setState({

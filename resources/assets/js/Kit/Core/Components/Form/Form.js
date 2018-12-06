@@ -264,19 +264,27 @@ class Form extends ComponentBase {
   handleSave = () => {
     if (!this.calcAllValid()) return
 
-    const { input, fieldErrors, validState } = this.state
+    const { input } = this.state
     const { onSubmit } = this.props
     this.setState({
-      save: onSubmit(input).catch(e => {
-        if (!(e.response && e.response.messages)) throw e
-        _.each(_.pick(e.response.messages, _.keys(this.fields)), (m, k) => {
-          fieldErrors[k] = m
-          validState[k] = false
+      save: onSubmit(input)
+        .then(() => {
+          const fieldErrors = {}
+          const validState = {}
+          this.setState({ fieldErrors, validState })
         })
-        fieldErrors['*'] = e.response.messages['*']
-        this.setState({ fieldErrors, validState })
-        throw e
-      }),
+        .catch(e => {
+          if (!(e.response && e.response.messages)) throw e
+          const fieldErrors = {}
+          const validState = {}
+          _.each(_.pick(e.response.messages, _.keys(this.fields)), (m, k) => {
+            fieldErrors[k] = m
+            validState[k] = false
+          })
+          fieldErrors['*'] = e.response.messages['*']
+          this.setState({ fieldErrors, validState })
+          throw e
+        }),
     })
   }
 

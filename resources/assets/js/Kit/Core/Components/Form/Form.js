@@ -1,23 +1,20 @@
 import React, { Component } from 'react'
 import _ from 'lodash'
-import {
-  Table,
-  Dropdown,
-  Input,
-  Button,
-  Message,
-  Checkbox,
-  Header,
-  Icon,
-  Label,
-  List,
-} from 'semantic-ui-react'
+import { Table, Button, Message, Header, Icon, Label } from 'semantic-ui-react'
 import changeCase, { paramCase } from 'change-case'
 import { subscribe } from 'react-contextual'
-import MaskedInput from 'react-text-mask'
-import { Checklist } from './Checklist'
-import { createMask } from './formFuncs'
 import { ComponentBase } from '../ComponentBase'
+import * as Fields from './Fields'
+
+function createMask(s) {
+  const arr = _.map(s, c => {
+    if (c.match(/\d/) !== null) {
+      return /\d/
+    }
+    return c
+  })
+  return arr
+}
 
 @subscribe('ioc')
 class Form extends ComponentBase {
@@ -171,13 +168,12 @@ class Form extends ComponentBase {
     }
   }
 
-  handleChangeAndBlur = (args, valueField = 'value') => (e, d) => {
-    this.handleChange(args, valueField, newValue =>
-      this.handleBlur({ ...args, value: newValue })(e),
-    )(e, d)
-  }
+  createHandleChangeAndBlur = (args, valueField = 'value') =>
+    this.createHandleChange(args, valueField, newValue =>
+      this.handleBlur({ ...args, value: newValue }),
+    )
 
-  handleChange = (args, valueField = 'value', cb = newValue => {}) => (
+  createHandleChange = (args, valueField = 'value', cb = newValue => {}) => (
     e,
     d,
   ) => {
@@ -210,7 +206,7 @@ class Form extends ComponentBase {
     )
   }
 
-  handleBlur = args => e => {
+  handleBlur = args => {
     const { value } = args
     if (value.length === 0) return
     this.validate(args, () => {
@@ -330,90 +326,6 @@ class Form extends ComponentBase {
     )
   }
 
-  textField(fieldInfo, args) {
-    const { input } = this.state
-    const { placeholder, inputLabel, mask, icon, params } = fieldInfo
-    const { name } = fieldInfo
-    return (
-      <Input
-        error={this.hasFieldError(args)}
-        label={inputLabel(args) || null}
-        style={{ width: '100%' }}
-        onBlur={this.handleBlur(args)}
-        icon={icon(args)}
-        iconPosition="left"
-        input={
-          <MaskedInput
-            mask={mask(args)}
-            value={input[name]}
-            placeholder={placeholder(args)}
-            showMask={mask(args) !== false}
-            onChange={event =>
-              this.handleChange(args)(event, {
-                value: event.target.value,
-              })
-            }
-          />
-        }
-        {...params(args)}
-      />
-    )
-  }
-
-  dropdownField(fieldInfo, args) {
-    const { input } = this.state
-    const { inputLabel, options } = fieldInfo
-    const { name } = fieldInfo
-    return (
-      <Dropdown
-        error={this.hasFieldError(args)}
-        fluid
-        selection
-        options={options(args)}
-        defaultValue={input[name]}
-        onChange={this.handleChangeAndBlur(args)}
-        style={{ width: '100%' }}
-        label={inputLabel(args) || null}
-      />
-    )
-  }
-
-  checklistField(fieldInfo, args) {
-    const { input } = this.state
-    const { options } = fieldInfo
-    const { name } = fieldInfo
-    return (
-      <Checklist
-        error={this.hasFieldError(args)}
-        options={options(args)}
-        defaultValues={input[name]}
-        onChange={this.handleChangeAndBlur(args)}
-      />
-    )
-  }
-
-  toggleField(fieldInfo, args) {
-    const { input } = this.state
-    const { name } = fieldInfo
-    return (
-      <Checkbox
-        toggle
-        defaultChecked={input[name]}
-        onChange={this.handleChangeAndBlur(args, 'checked')}
-      />
-    )
-  }
-
-  sectionField(fieldInfo, args) {
-    const { label } = fieldInfo
-    return <Header h={3}>{label(args)}</Header>
-  }
-
-  divField(fieldInfo, args) {
-    const { content } = fieldInfo
-    return content(args)
-  }
-
   renderSectionRow(fieldInfo, control, args) {
     const { inputsOnly } = this.props
     if (inputsOnly) {
@@ -448,7 +360,7 @@ class Form extends ComponentBase {
         )}
         {!inputsOnly && (
           <Table.Row>
-            <Table.Cell collapsing>
+            <Table.Cell collapsing style={{ verticalAlign: 'top' }}>
               {label(args)}{' '}
               {help(args) && (
                 <Icon
@@ -485,29 +397,49 @@ class Form extends ComponentBase {
       const { type, displayIf } = f
       let control = null
       const args = { form: input, context, fieldInfo: f, value: input[name] }
+      const props = {
+        ...args,
+        error: this.hasFieldError(args),
+        onBlur: () => this.handleBlur(args),
+      }
       if (!displayIf(args)) return null
       const resolvedType = type(args)
       switch (resolvedType) {
         case 'Text':
-          control = this.textField(f, args)
+          control = Fields.Text({
+            ...props,
+            onChange: event =>
+              this.createHandleChange(args)(event, {
+                value: event.target.value,
+              }),
+          })
           break
         case 'Dropdown':
-          control = this.dropdownField(f, args)
+          control = Fields.Dropdown({
+            ...props,
+            onChange: this.createHandleChangeAndBlur(args),
+          })
           break
         case 'Checklist':
-          control = this.checklistField(f, args)
+          control = React.createElement(Fields.Checklist, {
+            ...props,
+            onChange: this.createHandleChangeAndBlur(args),
+          })
           break
         case 'Toggle':
-          control = this.toggleField(f, args)
+          control = Fields.Toggle({
+            ...props,
+            onChange: this.createHandleChangeAndBlur(args, 'checked'),
+          })
           break
         case 'Section':
-          control = this.sectionField(f, args)
+          control = Fields.Section(props)
           break
         case 'Div':
-          control = this.divField(f, args)
+          control = Fields.Div(props)
           break
         default:
-          control = <div>Type {type} invalid</div>
+          control = <div>Type {type(args)} invalid</div>
           break
       }
       switch (resolvedType) {
@@ -579,5 +511,4 @@ Form.defaultProps = {
   submittedMessage: 'Saved.',
 }
 
-export * from './formFuncs'
 export { Form }

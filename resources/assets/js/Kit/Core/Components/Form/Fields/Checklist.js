@@ -6,9 +6,9 @@ class Checklist extends Component {
   constructor(props) {
     super(props)
     const values = {}
-    const { options, defaultValues } = props
+    const { options, value } = props
     _.each(options, v => {
-      values[v.key] = defaultValues[v.key] || false
+      values[v.key] = value || false
     })
     this.state = {
       values,
@@ -31,11 +31,15 @@ class Checklist extends Component {
   }
 
   render() {
-    const { options, error } = this.props
+    const {
+      fieldInfo: { options },
+      error,
+      onChange,
+    } = this.props
     const { values } = this.state
     return (
       <List>
-        {_.map(options, opt => (
+        {_.map(options(this.props), opt => (
           <List.Item key={opt.key}>
             <Checkbox
               className={error ? 'error' : ''}

@@ -2,15 +2,15 @@ import React, { Component } from 'react'
 import { Card } from 'semantic-ui-react'
 import changeCase from 'change-case'
 import { subscribe } from 'react-contextual'
-import { ComponentBase, Form, emailField, passwordField } from '..'
+import { ComponentBase, Form, email, password } from '..'
 
 @subscribe('ioc')
 class Login extends ComponentBase {
   constructor(props) {
     super(props)
     this.fields = {
-      email: emailField({ required: true }),
-      password: passwordField({ required: true }),
+      email: email({ required: true }),
+      password: password({ required: true }),
     }
   }
 

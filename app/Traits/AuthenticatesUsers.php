@@ -6,6 +6,7 @@ use App\Serializers\UserSerializer;
 use Illuminate\Foundation\Auth\AuthenticatesUsers as AuthenticatesUsersBase;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Lang;
 
 trait AuthenticatesUsers
 {
@@ -38,24 +39,22 @@ trait AuthenticatesUsers
 
   protected function sendLockoutResponse(Request $request)
   {
-    dd('sendLockoutResponse');
-
     $seconds = $this->limiter()->availableIn(
       $this->throttleKey($request)
     );
 
-    throw ValidationException::withMessages([
-      $this->username() => [Lang::get('auth.throttle', ['seconds' => $seconds])],
-    ])->status(429);
+    return (new Response([
+      'status' => 'error',
+      'messages' => ['*' => Lang::get('auth.throttle', ['seconds' => $seconds])],
+    ]));
   }
 
   protected function sendFailedLoginResponse(Request $request)
   {
-    dd('sendFailedLoginResponse');
-
-    throw ValidationException::withMessages([
-      $this->username() => [trans('auth.failed')],
-    ]);
+    return (new Response([
+      'status' => 'error',
+      'messages' => ['*' => trans('auth.failed')],
+    ]));
   }
 
   public function logout(Request $request)

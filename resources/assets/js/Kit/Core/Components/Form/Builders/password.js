@@ -1,11 +1,11 @@
+import { text } from './text'
+
 function password(config = {}) {
-  return {
-    params: () => {
-      return { type: 'password' }
-    },
-    icon: () => 'key',
+  return text({
+    params: { type: 'password' },
+    icon: 'key',
     ...config,
-  }
+  })
 }
 
 export { password }

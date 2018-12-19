@@ -1,10 +1,13 @@
+import { text } from './text'
+
 function phone(config = {}) {
-  return {
+  return text({
     mask: '(111) 555-1212',
+    icon: 'phone',
     unmask: /[^\d]/g,
     validate: /\d{10}/,
     ...config,
-  }
+  })
 }
 
 export { phone }

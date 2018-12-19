@@ -13,7 +13,7 @@ function email(config = {}) {
       if (!isValid) return 'That does not appear to be an email address.'
       return true
     },
-    icon: () => 'at',
+    icon: 'at',
     ...config,
   })
 }

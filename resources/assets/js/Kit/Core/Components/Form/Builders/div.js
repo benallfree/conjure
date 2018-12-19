@@ -1,8 +1,16 @@
+import { field } from './field'
+
 function div(config = {}) {
-  return {
-    type: 'Div',
+  return field({
+    render: props => {
+      const {
+        fieldInfo: { content },
+      } = props
+      return content(props)
+    },
     ...config,
-  }
+    type: 'Div',
+  })
 }
 
 export { div }

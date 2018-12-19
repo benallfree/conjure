@@ -7,7 +7,7 @@ function quantity(config = {}) {
   return integer({
     min,
     max,
-    inputLabel: () => 'qty',
+    inputLabel: 'qty',
     format: ({ value }) =>
       numeral(parseInt(value, 0)).format('0'.repeat(`${max}`.length)),
     ...config,

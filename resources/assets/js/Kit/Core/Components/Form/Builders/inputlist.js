@@ -1,6 +1,8 @@
+import _ from 'lodash'
+import { field } from './field'
+
 function inputlist(config = {}) {
-  return {
-    type: 'Inputlist',
+  return field({
     defaultValue: info => {
       const { options } = info
       const ret = {}
@@ -10,7 +12,8 @@ function inputlist(config = {}) {
       return ret
     },
     ...config,
-  }
+    type: 'Inputlist',
+  })
 }
 
 export { inputlist }

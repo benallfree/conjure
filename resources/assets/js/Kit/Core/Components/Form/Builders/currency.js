@@ -5,7 +5,7 @@ function currency(config = {}) {
     min: 0,
     max: 1000,
     precision: 2,
-    inputLabel: () => '$',
+    inputLabel: '$',
     ...config,
   })
 }

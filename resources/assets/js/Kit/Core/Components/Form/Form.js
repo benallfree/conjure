@@ -1,31 +1,18 @@
 import React, { Component } from 'react'
 import _ from 'lodash'
 import { Table, Button, Message, Header, Icon, Label } from 'semantic-ui-react'
-import changeCase, { paramCase } from 'change-case'
 import { subscribe } from 'react-contextual'
 import { ComponentBase } from '../ComponentBase'
-import * as Fields from './Fields'
-
-function createMask(s) {
-  const arr = _.map(s, c => {
-    if (c.match(/\d/) !== null) {
-      return /\d/
-    }
-    return c
-  })
-  return arr
-}
 
 @subscribe('ioc')
 class Form extends ComponentBase {
   loadState() {
     const input = {}
-    const { context } = this.props
+    const { context, fields } = this.props
     let allValid = true
     const validState = {}
-    this.fields = this.buildFields()
-    _.each(this.fields, fieldInfo => {
-      const { name, defaultValue, validate, format, options } = fieldInfo
+    _.each(fields, (fieldInfo, name) => {
+      const { defaultValue, validate, format, options } = fieldInfo
       let v = defaultValue({ context, fieldInfo, options })
       const isValid = validate({ context, fieldInfo, value: v }) === true
       allValid = allValid && isValid
@@ -45,112 +32,6 @@ class Form extends ComponentBase {
     }
   }
 
-  buildFields() {
-    const defaults = {
-      required: false,
-      type: () => 'Text',
-      placeholder: ({ fieldInfo }) => changeCase.title(fieldInfo.name),
-      label: ({ fieldInfo }) => changeCase.title(fieldInfo.name),
-      options: () => [],
-      content: ({ fieldInfo }) => (
-        <div>{changeCase.title(fieldInfo)} content</div>
-      ),
-      displayIf: () => true,
-      defaultValue: ({ fieldInfo }) => null,
-      inputLabel: () => '',
-      help: () => null,
-      validate: () => true,
-      mask: () => false,
-      unmask: ({ value }) => value,
-      inputFormat: ({ value }) => value,
-      format: ({ value }) => value,
-      input: ({ value }) => value,
-      calculate: () => {},
-      icon: () => false,
-      params: () => {
-        return {}
-      },
-    }
-
-    function createHandler({ handlerName, fieldHandler, defaultHandler }) {
-      function create() {
-        let val = fieldHandler
-        if (val === undefined) val = defaultHandler
-        if (typeof val === 'function') return val
-        switch (handlerName) {
-          case 'mask':
-            if (typeof val === 'string') {
-              val = createMask(val)
-              return () => val
-            }
-            break
-          case 'unmask':
-            if (val instanceof RegExp) {
-              return ({ value }) => value.replace(val, '')
-            }
-            break
-          case 'validate':
-            if (val instanceof RegExp) {
-              return ({ value }) => (value ? value.match(val) !== null : true)
-            }
-            break
-          default:
-            break
-        }
-        return () => val
-      }
-
-      const handler = create()
-      switch (handlerName) {
-        case 'validate':
-          return args => {
-            const { fieldInfo, value } = args
-            const { required } = fieldInfo
-            const isRequired = required(args)
-            const isEmpty =
-              value === undefined ||
-              value === null ||
-              (typeof value === 'string' && value.trim().length === 0)
-            if (isRequired && isEmpty) {
-              return `Required`
-            }
-            return handler(args)
-          }
-        case 'defaultValue':
-          return args => {
-            const { fieldInfo } = args
-            const { format, defaultValue } = fieldInfo
-            let value = handler(args)
-            const isEmpty =
-              value === undefined ||
-              value === null ||
-              (typeof value === 'string' && value.trim().length === 0)
-            if (!isEmpty) {
-              value = format({ ...args, value })
-            }
-            return value
-          }
-        default:
-      }
-      return handler
-    }
-
-    const { fields } = this.props
-    const ret = {}
-    _.each(fields, (f, fieldName) => {
-      ret[fieldName] = { name: fieldName }
-      _.each(defaults, (v, k) => {
-        ret[fieldName][k] = createHandler({
-          handlerName: k,
-          fieldHandler: f[k],
-          defaultHandler: v,
-        })
-      })
-    })
-
-    return ret
-  }
-
   componentDidMount() {
     super.componentDidMount()
     setImmediate(() => this.notifyValidState())
@@ -168,36 +49,37 @@ class Form extends ComponentBase {
     }
   }
 
-  createHandleChangeAndBlur = (args, valueField = 'value') =>
-    this.createHandleChange(args, valueField, newValue =>
-      this.handleBlur({ ...args, value: newValue }),
-    )
-
-  createHandleChange = (args, valueField = 'value', cb = newValue => {}) => (
-    e,
-    d,
-  ) => {
+  handleChange = (args, cb = newArgs => {}) => {
     const { input } = this.state
-    const { fieldInfo } = args
-    const { name, unmask, calculate } = fieldInfo
-    const { value: maskedValue, ...rest } = args
-    const value = unmask({ ...rest, value: d[valueField] })
-    input[fieldInfo.name] = value
-    calculate({ ...args, form: input, value })
-    this.setState({ input, changedSinceLastBlur: true }, () =>
-      this.setState({ allValid: this.calcAllValid() }, () => cb(value)),
+    const {
+      fieldInfo: { unmask, calculate },
+      name,
+    } = args
+    const value = unmask(args)
+    const mutatedInput = { ...input, [name]: value }
+    const mutatedArgs = { ...args, form: mutatedInput, value }
+    calculate(mutatedArgs)
+    this.setState({ input: mutatedInput, changedSinceLastBlur: true }, () =>
+      this.setState({ allValid: this.calcAllValid() }, () => cb(mutatedArgs)),
     )
-    this.props.onChange(fieldInfo.name, value, input)
+    this.props.onChange(name, value, mutatedInput)
   }
 
   calcAllValid() {
+    const { fields } = this.props
     return _.reduce(
-      this.fields,
+      fields,
       (res, f, name) => {
         const { input } = this.state
         const { context } = this.props
         const { validate } = f
-        const args = { form: input, context, fieldInfo: f, value: input[name] }
+        const args = {
+          form: input,
+          context,
+          fieldInfo: f,
+          value: input[name],
+          name,
+        }
         const validResult = validate(args)
         const isValid = validResult === true
         return res && isValid
@@ -211,17 +93,18 @@ class Form extends ComponentBase {
     if (value.length === 0) return
     this.validate(args, () => {
       const { input } = this.state
-      const { fieldInfo } = args
+      const { fieldInfo, name } = args
       const { format } = fieldInfo
-      input[fieldInfo.name] = format({ ...args, value: input[fieldInfo.name] })
-      this.setState({ input }, () => this.notifyValidState())
+      const formattedValue = format({ ...args, value: input[name] })
+      const mutatedInput = { ...input, [name]: formattedValue }
+      this.setState({ input: mutatedInput }, () => this.notifyValidState())
     })
   }
 
   validate = (args, cb = null) => {
     const { validState, fieldErrors } = this.state
-    const { fieldInfo } = args
-    const { name, validate } = fieldInfo
+    const { fieldInfo, name } = args
+    const { validate } = fieldInfo
     const validResult = validate(args)
     validState[name] = validResult === true
     fieldErrors[name] = validResult
@@ -232,8 +115,7 @@ class Form extends ComponentBase {
 
   hasFieldError = args => {
     const { validState } = this.state
-    const { fieldInfo } = args
-    const { name } = fieldInfo
+    const { name } = args
 
     return validState[name] === false
   }
@@ -244,12 +126,20 @@ class Form extends ComponentBase {
   }
 
   validateAll = () => {
+    const { fields } = this.props
+
     return _.reduce(
-      this.fields,
+      fields,
       (res, f, name) => {
         const { input } = this.state
         const { context } = this.props
-        const args = { form: input, context, fieldInfo: f, value: input[name] }
+        const args = {
+          form: input,
+          context,
+          fieldInfo: f,
+          value: input[name],
+          name,
+        }
         const isValid = this.validate(args)
         return res && isValid
       },
@@ -261,7 +151,7 @@ class Form extends ComponentBase {
     if (!this.calcAllValid()) return
 
     const { input } = this.state
-    const { onSubmit } = this.props
+    const { onSubmit, fields } = this.props
     this.setState({
       save: onSubmit(input)
         .then(() => {
@@ -273,7 +163,7 @@ class Form extends ComponentBase {
           if (!(e.response && e.response.messages)) throw e
           const fieldErrors = {}
           const validState = {}
-          _.each(_.pick(e.response.messages, _.keys(this.fields)), (m, k) => {
+          _.each(_.pick(e.response.messages, _.keys(fields)), (m, k) => {
             fieldErrors[k] = m
             validState[k] = false
           })
@@ -326,7 +216,7 @@ class Form extends ComponentBase {
     )
   }
 
-  renderSectionRow(fieldInfo, control, args) {
+  renderSectionRow(control, args) {
     const { inputsOnly } = this.props
     if (inputsOnly) {
       return (
@@ -344,10 +234,11 @@ class Form extends ComponentBase {
     )
   }
 
-  renderDefaultRow(fieldInfo, control, args) {
+  renderDefaultRow(control, args) {
     const { helpState } = this.state
     const { inputsOnly } = this.props
-    const { name, label, help } = fieldInfo
+    const { name, fieldInfo } = args
+    const { label, help } = fieldInfo
     return (
       <React.Fragment>
         {inputsOnly && (
@@ -391,62 +282,34 @@ class Form extends ComponentBase {
 
   buildFormRows() {
     const { input } = this.state
-    const { context } = this.props
+    const { context, fields } = this.props
 
-    return _.map(this.fields, (f, name) => {
-      const { type, displayIf } = f
+    return _.map(fields, (f, name) => {
+      const { type, displayIf, render } = f
       let control = null
-      const args = { form: input, context, fieldInfo: f, value: input[name] }
+      const args = {
+        form: input,
+        context,
+        fieldInfo: f,
+        value: input[name],
+        name,
+      }
       const props = {
         ...args,
         error: this.hasFieldError(args),
-        onBlur: () => this.handleBlur(args),
+        onBlur: this.handleBlur,
+        onChange: (value, cb = () => {}) =>
+          this.handleChange({ ...args, value }, cb),
       }
       if (!displayIf(args)) return null
       const resolvedType = type(args)
-      switch (resolvedType) {
-        case 'Text':
-          control = Fields.Text({
-            ...props,
-            onChange: event =>
-              this.createHandleChange(args)(event, {
-                value: event.target.value,
-              }),
-          })
-          break
-        case 'Dropdown':
-          control = Fields.Dropdown({
-            ...props,
-            onChange: this.createHandleChangeAndBlur(args),
-          })
-          break
-        case 'Checklist':
-          control = React.createElement(Fields.Checklist, {
-            ...props,
-            onChange: this.createHandleChangeAndBlur(args),
-          })
-          break
-        case 'Toggle':
-          control = Fields.Toggle({
-            ...props,
-            onChange: this.createHandleChangeAndBlur(args, 'checked'),
-          })
-          break
-        case 'Section':
-          control = Fields.Section(props)
-          break
-        case 'Div':
-          control = Fields.Div(props)
-          break
-        default:
-          control = <div>Type {type(args)} invalid</div>
-          break
-      }
+      control = render(props)
+
       switch (resolvedType) {
         case 'Section':
-          return this.renderSectionRow(f, control, args)
+          return this.renderSectionRow(control, args)
         default:
-          return this.renderDefaultRow(f, control, args)
+          return this.renderDefaultRow(control, args)
       }
     })
   }

@@ -34,6 +34,7 @@ function text(config = {}) {
         />
       )
     },
+    type: 'Text',
     ...config,
   })
 }

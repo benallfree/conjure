@@ -10,8 +10,8 @@ function section(config = {}) {
       } = props
       return <Header h={3}>{label(props)}</Header>
     },
-    ...config,
     type: 'Section',
+    ...config,
   })
 }
 

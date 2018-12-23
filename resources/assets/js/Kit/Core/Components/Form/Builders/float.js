@@ -11,6 +11,7 @@ function float(config = {}) {
     format: ({ value }) => numeral(parseFloat(value)).format(mask),
     mask,
     unmask: ({ value }) => value.replace(/[^\d.]/g, '').replace(/\.$/, ''),
+    type: 'Float',
     ...config,
   })
 }

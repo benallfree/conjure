@@ -16,8 +16,8 @@ function toggle(config = {}) {
         />
       )
     },
-    ...config,
     type: 'Toggle',
+    ...config,
   })
 }
 

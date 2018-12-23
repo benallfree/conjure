@@ -5,6 +5,7 @@ function rate(config = {}) {
     min: 0.0,
     max: 0.05,
     precision: 4,
+    type: 'Rate',
     ...config,
   })
 }

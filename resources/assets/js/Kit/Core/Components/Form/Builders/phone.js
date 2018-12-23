@@ -6,6 +6,7 @@ function phone(config = {}) {
     icon: 'phone',
     unmask: /[^\d]/g,
     validate: /\d{10}/,
+    type: 'Phone',
     ...config,
   })
 }

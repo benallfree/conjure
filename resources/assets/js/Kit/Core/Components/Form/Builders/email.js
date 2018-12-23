@@ -14,6 +14,7 @@ function email(config = {}) {
       return true
     },
     icon: 'at',
+    type: 'Email',
     ...config,
   })
 }

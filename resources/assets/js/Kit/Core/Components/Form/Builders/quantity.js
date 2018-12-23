@@ -10,6 +10,7 @@ function quantity(config = {}) {
     inputLabel: 'qty',
     format: ({ value }) =>
       numeral(parseInt(value, 0)).format('0'.repeat(`${max}`.length)),
+    type: 'Quantity',
     ...config,
   })
 }

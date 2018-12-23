@@ -8,8 +8,8 @@ function div(config = {}) {
       } = props
       return content(props)
     },
-    ...config,
     type: 'Div',
+    ...config,
   })
 }
 

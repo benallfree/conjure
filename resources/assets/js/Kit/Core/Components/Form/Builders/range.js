@@ -11,6 +11,7 @@ function range(config = {}) {
       if (v < min || v > max) return `Value must be between ${min} and ${max}.`
       return true
     },
+    type: 'Range',
     ...config,
   })
 }

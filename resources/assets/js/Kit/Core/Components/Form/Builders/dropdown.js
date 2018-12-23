@@ -25,8 +25,8 @@ export { Dropdown }
 function dropdown(config = {}) {
   return field({
     render: props => <Dropdown {...props} />,
-    ...config,
     type: 'Dropdown',
+    ...config,
   })
 }
 

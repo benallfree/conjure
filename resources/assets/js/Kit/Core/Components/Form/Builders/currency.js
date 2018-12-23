@@ -6,6 +6,7 @@ function currency(config = {}) {
     max: 1000,
     precision: 2,
     inputLabel: '$',
+    type: 'Currency',
     ...config,
   })
 }

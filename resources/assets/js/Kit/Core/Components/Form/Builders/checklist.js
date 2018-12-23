@@ -53,8 +53,8 @@ function checklist(config = {}) {
         </List>
       )
     },
-    ...config,
     type: 'Checklist',
+    ...config,
   })
 }
 

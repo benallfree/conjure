@@ -11,8 +11,8 @@ function inputlist(config = {}) {
       })
       return ret
     },
-    ...config,
     type: 'Inputlist',
+    ...config,
   })
 }
 

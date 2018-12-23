@@ -10,6 +10,8 @@ function integer(config = {}) {
     format: ({ value }) => numeral(parseInt(value, 0)).format(mask),
     mask,
     unmask: /[^\d]/g,
+    type: 'Integer',
+
     ...config,
   })
 }

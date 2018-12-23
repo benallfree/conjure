@@ -8,16 +8,17 @@ import { ComponentBase } from '../ComponentBase'
 class Form extends ComponentBase {
   loadState() {
     const input = {}
-    const { context, fields } = this.props
+    const { fields } = this.props
     let allValid = true
     const validState = {}
     _.each(fields, (fieldInfo, name) => {
-      const { defaultValue, validate, format, options } = fieldInfo
-      let v = defaultValue({ context, fieldInfo, options })
-      const isValid = validate({ context, fieldInfo, value: v }) === true
+      const { defaultValue, validate, format } = fieldInfo
+
+      let v = defaultValue()
+      const isValid = validate({ value: v }) === true
       allValid = allValid && isValid
       if (isValid) {
-        v = format({ context, fieldInfo, value: v })
+        v = format({ value: v })
       }
       validState[name] = true
       input[name] = v === null ? '' : v
@@ -39,13 +40,13 @@ class Form extends ComponentBase {
 
   notifyValidState() {
     const { allValid, input, changedSinceLastBlur } = this.state
-    const { onValid, onInvalid, context } = this.props
+    const { onValid, onInvalid } = this.props
     if (!changedSinceLastBlur) return
     this.setState({ changedSinceLastBlur: false })
     if (allValid) {
-      onValid(input, context)
+      onValid(input)
     } else {
-      onInvalid(input, context)
+      onInvalid(input)
     }
   }
 
@@ -71,11 +72,9 @@ class Form extends ComponentBase {
       fields,
       (res, f, name) => {
         const { input } = this.state
-        const { context } = this.props
         const { validate } = f
         const args = {
           form: input,
-          context,
           fieldInfo: f,
           value: input[name],
           name,
@@ -113,9 +112,8 @@ class Form extends ComponentBase {
     return validState[name]
   }
 
-  hasFieldError = args => {
+  hasFieldError = name => {
     const { validState } = this.state
-    const { name } = args
 
     return validState[name] === false
   }
@@ -132,10 +130,8 @@ class Form extends ComponentBase {
       fields,
       (res, f, name) => {
         const { input } = this.state
-        const { context } = this.props
         const args = {
           form: input,
-          context,
           fieldInfo: f,
           value: input[name],
           name,
@@ -216,7 +212,7 @@ class Form extends ComponentBase {
     )
   }
 
-  renderSectionRow(control, args) {
+  renderSectionRow(control, fieldInfo, args) {
     const { inputsOnly } = this.props
     if (inputsOnly) {
       return (
@@ -234,17 +230,17 @@ class Form extends ComponentBase {
     )
   }
 
-  renderDefaultRow(control, args) {
+  renderDefaultRow(control, fieldInfo, args) {
     const { helpState } = this.state
     const { inputsOnly } = this.props
-    const { name, fieldInfo } = args
+    const { name } = args
     const { label, help } = fieldInfo
     return (
       <React.Fragment>
         {inputsOnly && (
           <React.Fragment>
             {control}
-            {this.hasFieldError(args) && (
+            {this.hasFieldError(name) && (
               <div style={{ color: 'red' }}>{this.fieldErrorMessage(name)}</div>
             )}
           </React.Fragment>
@@ -268,7 +264,7 @@ class Form extends ComponentBase {
             <Table.Cell>
               {control}
               {helpState[name] && <Label pointing>{help(args)}</Label>}
-              {this.hasFieldError(args) && (
+              {this.hasFieldError(name) && (
                 <div style={{ color: 'red' }}>
                   {this.fieldErrorMessage(name)}
                 </div>
@@ -282,34 +278,31 @@ class Form extends ComponentBase {
 
   buildFormRows() {
     const { input } = this.state
-    const { context, fields } = this.props
+    const { fields } = this.props
 
     return _.map(fields, (f, name) => {
       const { type, displayIf, render } = f
-      let control = null
       const args = {
         form: input,
-        context,
-        fieldInfo: f,
         value: input[name],
         name,
+        fieldInfo: f,
       }
-      const props = {
+      if (!displayIf(args)) return null
+      const control = render({
         ...args,
-        error: this.hasFieldError(args),
+        error: this.hasFieldError(name),
         onBlur: this.handleBlur,
         onChange: (value, cb = () => {}) =>
           this.handleChange({ ...args, value }, cb),
-      }
-      if (!displayIf(args)) return null
-      const resolvedType = type(args)
-      control = render(props)
+      })
 
+      const resolvedType = type(args)
       switch (resolvedType) {
         case 'Section':
-          return this.renderSectionRow(control, args)
+          return this.renderSectionRow(control, f, args)
         default:
-          return this.renderDefaultRow(control, args)
+          return this.renderDefaultRow(control, f, args)
       }
     })
   }

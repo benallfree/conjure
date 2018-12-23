@@ -33,9 +33,16 @@ const DEFAULTS = {
   icon: false,
   params: () => ({}),
   render: ({ name }) => <div>{changeCase.title(name)} placeholder</div>,
+  items: [],
+  itemRender: () => null,
 }
 
-function createHandler({ handlerName, fieldHandler, defaultHandler }) {
+function createHandler({
+  handlerName,
+  fieldHandler,
+  defaultHandler,
+  fieldInfo,
+}) {
   function create() {
     let val = fieldHandler
     if (val === undefined) val = defaultHandler
@@ -71,7 +78,7 @@ function createHandler({ handlerName, fieldHandler, defaultHandler }) {
   switch (handlerName) {
     case 'validate':
       return args => {
-        const { fieldInfo, value } = args
+        const { value } = args
         const { required } = fieldInfo
         const isRequired = required(args)
         const isEmpty =
@@ -81,13 +88,12 @@ function createHandler({ handlerName, fieldHandler, defaultHandler }) {
         if (isRequired && isEmpty) {
           return `Required`
         }
-        return handler(args)
+        return handler({ fieldInfo, ...args })
       }
     case 'defaultValue':
       return args => {
-        const { fieldInfo } = args
-        const { format, defaultValue } = fieldInfo
-        let value = handler(args)
+        const { format } = fieldInfo
+        let value = handler({ fieldInfo, ...args })
         const isEmpty =
           value === undefined ||
           value === null ||
@@ -99,7 +105,9 @@ function createHandler({ handlerName, fieldHandler, defaultHandler }) {
       }
     default:
   }
-  return handler
+  return args => {
+    return handler({ fieldInfo, ...args })
+  }
 }
 
 function buildProps(props) {
@@ -109,6 +117,7 @@ function buildProps(props) {
       handlerName: k,
       fieldHandler: props[k],
       defaultHandler: v,
+      fieldInfo: ret,
     })
   })
 

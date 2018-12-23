@@ -14,7 +14,9 @@ const ensureLoggedIn = options => {
       if (redirect) {
         let url = null
         if (redirect === true) {
-          url = routes.login({ r: match.url })
+          url = routes.login({
+            r: `${window.location.pathname}${window.location.search}`,
+          })
         } else {
           url = redirect(props)
         }

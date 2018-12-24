@@ -1,14 +1,17 @@
+import React from 'react'
+import changeCase, { paramCase } from 'change-case'
 import { field } from './field'
 
 function div(config = {}) {
   return field({
+    type: 'Div',
+    content: ({ name }) => <div>{changeCase.title(name)} content</div>,
     render: props => {
       const {
         fieldInfo: { content },
       } = props
       return content(props)
     },
-    type: 'Div',
     ...config,
   })
 }

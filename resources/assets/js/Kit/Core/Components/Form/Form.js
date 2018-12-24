@@ -13,13 +13,10 @@ class Form extends ComponentBase {
     const validState = {}
     _.each(fields, (fieldInfo, name) => {
       const { defaultValue, validate, format } = fieldInfo
-
-      let v = defaultValue()
+      if (!defaultValue) return
+      const v = defaultValue()
       const isValid = validate({ value: v }) === true
       allValid = allValid && isValid
-      if (isValid) {
-        v = format({ value: v })
-      }
       validState[name] = true
       input[name] = v === null ? '' : v
     })
@@ -52,14 +49,9 @@ class Form extends ComponentBase {
 
   handleChange = (args, cb = newArgs => {}) => {
     const { input } = this.state
-    const {
-      fieldInfo: { unmask, calculate },
-      name,
-    } = args
-    const value = unmask(args)
+    const { name, value } = args
     const mutatedInput = { ...input, [name]: value }
-    const mutatedArgs = { ...args, form: mutatedInput, value }
-    calculate(mutatedArgs)
+    const mutatedArgs = { ...args, form: mutatedInput }
     this.setState({ input: mutatedInput, changedSinceLastBlur: true }, () =>
       this.setState({ allValid: this.calcAllValid() }, () => cb(mutatedArgs)),
     )
@@ -67,16 +59,17 @@ class Form extends ComponentBase {
   }
 
   calcAllValid() {
+    const { input } = this.state
     const { fields } = this.props
     return _.reduce(
-      fields,
-      (res, f, name) => {
-        const { input } = this.state
-        const { validate } = f
+      input,
+      (res, value, name) => {
+        const fieldInfo = fields[name]
+        const { validate } = fieldInfo
         const args = {
           form: input,
-          fieldInfo: f,
-          value: input[name],
+          fieldInfo,
+          value,
           name,
         }
         const validResult = validate(args)
@@ -88,14 +81,10 @@ class Form extends ComponentBase {
   }
 
   handleBlur = args => {
-    const { value } = args
-    if (value.length === 0) return
+    const { name, value } = args
     this.validate(args, () => {
       const { input } = this.state
-      const { fieldInfo, name } = args
-      const { format } = fieldInfo
-      const formattedValue = format({ ...args, value: input[name] })
-      const mutatedInput = { ...input, [name]: formattedValue }
+      const mutatedInput = { ...input, [name]: value }
       this.setState({ input: mutatedInput }, () => this.notifyValidState())
     })
   }

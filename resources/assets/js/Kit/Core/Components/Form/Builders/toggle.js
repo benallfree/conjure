@@ -1,10 +1,11 @@
 import React, { Component } from 'react'
 import _ from 'lodash'
 import { Checkbox } from 'semantic-ui-react'
-import { field } from './field'
+import { input } from './input'
 
 function toggle(config = {}) {
-  return field({
+  return input({
+    type: 'Toggle',
     defaultValue: false,
     render: props => {
       const { value, onChange, onBlur } = props
@@ -16,7 +17,6 @@ function toggle(config = {}) {
         />
       )
     },
-    type: 'Toggle',
     ...config,
   })
 }

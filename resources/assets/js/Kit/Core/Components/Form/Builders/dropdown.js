@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
 import _ from 'lodash'
 import { Dropdown as SuiDropdown } from 'semantic-ui-react'
-import { field } from './field'
+import { input } from './input'
 
-const Dropdown = props => {
+const render = props => {
   const { fieldInfo, value, error, onChange, onBlur } = props
   const { inputLabel, options } = fieldInfo
   return (
@@ -20,12 +20,11 @@ const Dropdown = props => {
   )
 }
 
-export { Dropdown }
-
 function dropdown(config = {}) {
-  return field({
-    render: props => <Dropdown {...props} />,
+  return input({
     type: 'Dropdown',
+    options: [],
+    render,
     ...config,
   })
 }

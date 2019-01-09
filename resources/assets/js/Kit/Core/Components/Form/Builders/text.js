@@ -1,84 +1,63 @@
-import React from 'react'
+import React, { Component } from 'react'
 import _ from 'lodash'
 import { Input } from 'semantic-ui-react'
-import MaskedInput from 'react-text-mask'
-import changeCase, { paramCase } from 'change-case'
+import changeCase from 'change-case'
 import { input } from './input'
-
-function createMask(s) {
-  const arr = _.map(s, c => {
-    if (c.match(/\d/) !== null) {
-      return /\d/
-    }
-    return c
-  })
-  return arr
-}
-
-const render = props => {
-  const {
-    fieldInfo: { placeholder, inputLabel, mask, icon, params, unmask, format },
-    value,
-    error,
-    onBlur,
-    onChange,
-  } = props
-  return (
-    <Input
-      error={error}
-      label={inputLabel(props) || null}
-      style={{ width: '100%' }}
-      onBlur={() => onBlur({ ...props, value: format(props) })}
-      icon={icon(props)}
-      iconPosition="left"
-      input={
-        <MaskedInput
-          mask={mask(props)}
-          value={value}
-          placeholder={placeholder(props)}
-          showMask={mask(props) !== false}
-          onChange={e => onChange(unmask({ ...props, value: e.target.value }))}
-        />
-      }
-      {...params(props)}
-    />
-  )
-}
-
-const placeholder = ({ name }) => changeCase.title(name)
+import { fieldState } from './fieldState'
 
 function text(config = {}) {
   const finalConfig = {
     type: 'Text',
-    placeholder,
-    mask: false,
-    unmask: ({ value }) => value,
-    inputFormat: ({ value }) => value,
-    format: ({ value }) => value,
-    input: ({ value }) => value,
+    placeholder: ({ name }) => changeCase.title(name),
+    filter: ({ value }) => value,
     icon: false,
     params: () => ({}),
-    render,
+    render: props => {
+      const {
+        fieldInfo: { placeholder, inputLabel, icon, params, filter },
+        error,
+        onBlur,
+        onChange,
+        value,
+      } = props
+      const textArgs = fieldState(props)
+      return (
+        <Input
+          error={error}
+          label={inputLabel(textArgs) || null}
+          style={{ width: '100%' }}
+          onBlur={() => onBlur(textArgs)}
+          icon={icon(textArgs)}
+          iconPosition="left"
+          placeholder={placeholder(textArgs)}
+          onChange={e => {
+            const { selectionStart } = e.target
+            e.persist()
+            onChange(
+              {
+                ...textArgs,
+                value: filter({ ...textArgs, value: e.target.value }),
+              },
+              () => {
+                e.target.selectionStart = selectionStart
+                e.target.selectionEnd = e.target.selectionStart
+              },
+            )
+          }}
+          value={value}
+          {...params(textArgs)}
+        />
+      )
+    },
     ...config,
   }
 
-  if (typeof finalConfig.mask === 'string') {
-    finalConfig.mask = createMask(finalConfig.mask)
-  }
-
-  if (typeof finalConfig.unmask instanceof RegExp) {
-    finalConfig.unmask = (re => ({ value }) => value.replace(re, ''))(
-      finalConfig.unmask,
-    )
-  }
-
   const fieldInfo = input(finalConfig)
-
   fieldInfo.defaultValue = (handler => args => {
     const { format } = fieldInfo
     const value = handler(args)
     if (value.length === 0) return value
-    return format({ ...args, value })
+    return value
   })(fieldInfo.defaultValue)
 
   return fieldInfo

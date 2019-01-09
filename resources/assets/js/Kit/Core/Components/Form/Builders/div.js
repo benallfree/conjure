@@ -1,6 +1,7 @@
 import React from 'react'
 import changeCase, { paramCase } from 'change-case'
 import { field } from './field'
+import { fieldState } from './fieldState'
 
 function div(config = {}) {
   return field({
@@ -10,7 +11,8 @@ function div(config = {}) {
       const {
         fieldInfo: { content },
       } = props
-      return content(props)
+      const divArgs = fieldState(props)
+      return content(divArgs)
     },
     ...config,
   })

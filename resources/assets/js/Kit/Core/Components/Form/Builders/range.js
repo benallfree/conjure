@@ -1,19 +1,32 @@
 import numeral from 'numeral'
-import { text } from './text'
+import { maskedText, createMaskArrayFromString } from './maskedText'
 
 function range(config = {}) {
-  const min = config.min || 0.0
-  const max = config.max || 0.0
-  return text({
-    defaultValue: min,
-    validate: ({ value }) => {
-      const v = parseFloat(value)
-      if (v < min || v > max) return `Value must be between ${min} and ${max}.`
+  const field = maskedText({
+    type: 'Range',
+    mask: ({ fieldInfo: { max } }) =>
+      createMaskArrayFromString('0'.repeat(`${max()}`.length)),
+    unmask: /[^\d]/g,
+    min: 0,
+    max: 100,
+    defaultValue: 0,
+    validate: args => {
+      const {
+        value: v,
+        fieldInfo: { min, max, conformValue },
+      } = args
+      if (v < min() || v > max())
+        return `Value must be between ${conformValue({
+          ...args,
+          value: min(),
+        })} and ${conformValue({ ...args, value: max() })}.`
       return true
     },
-    type: 'Range',
+    placeholderChar: '0',
     ...config,
   })
+
+  return field
 }
 
 export { range }

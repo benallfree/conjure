@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import _ from 'lodash'
 import { Checkbox } from 'semantic-ui-react'
 import { input } from './input'
+import { fieldState } from './fieldState'
 
 function toggle(config = {}) {
   return input({
@@ -9,11 +10,14 @@ function toggle(config = {}) {
     defaultValue: false,
     render: props => {
       const { value, onChange, onBlur } = props
+      const toggleArgs = fieldState(props)
       return (
         <Checkbox
           toggle
           defaultChecked={value}
-          onChange={(e, d) => onChange(d.checked, onBlur)}
+          onChange={(e, d) =>
+            onChange({ ...toggleArgs, value: d.checked }, onBlur)
+          }
         />
       )
     },

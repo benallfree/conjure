@@ -12,7 +12,7 @@ class Form extends ComponentBase {
     let allValid = true
     const validState = {}
     _.each(fields, (fieldInfo, name) => {
-      const { defaultValue, validate, format } = fieldInfo
+      const { defaultValue, validate } = fieldInfo
       if (!defaultValue) return
       const v = defaultValue()
       const isValid = validate({ value: v }) === true
@@ -85,7 +85,10 @@ class Form extends ComponentBase {
     this.validate(args, () => {
       const { input } = this.state
       const mutatedInput = { ...input, [name]: value }
-      this.setState({ input: mutatedInput }, () => this.notifyValidState())
+      this.setState({ input: mutatedInput }, () => {
+        this.notifyValidState()
+        this.props.onBlur(name, value, mutatedInput)
+      })
     })
   }
 
@@ -94,10 +97,18 @@ class Form extends ComponentBase {
     const { fieldInfo, name } = args
     const { validate } = fieldInfo
     const validResult = validate(args)
-    validState[name] = validResult === true
-    fieldErrors[name] = validResult
     const allValid = this.calcAllValid()
-    this.setState({ allValid, validState, fieldErrors }, cb)
+    this.setState(
+      {
+        allValid,
+        validState: { ...validState, [name]: validResult === true },
+        fieldErrors: {
+          ...fieldErrors,
+          [name]: validResult === true ? null : validResult,
+        },
+      },
+      cb,
+    )
     return validState[name]
   }
 
@@ -175,6 +186,7 @@ class Form extends ComponentBase {
     const { allValid } = this.state
     const save = this.asyncState('save')
     const {
+      onSubmit,
       onCancel,
       saveButtonText,
       saveButtonIcon,
@@ -188,15 +200,17 @@ class Form extends ComponentBase {
             {cancelButtonText}
           </Button>
         )}
-        <Button
-          loading={save.isLoading}
-          disabled={!allValid || save.isLoading}
-          primary
-          onClick={this.handleSave}
-        >
-          {saveButtonIcon && <Icon name={saveButtonIcon} />}
-          {saveButtonText}
-        </Button>
+        {onSubmit && (
+          <Button
+            loading={save.isLoading}
+            disabled={!allValid || save.isLoading}
+            primary
+            onClick={this.handleSave}
+          >
+            {saveButtonIcon && <Icon name={saveButtonIcon} />}
+            {saveButtonText}
+          </Button>
+        )}
       </React.Fragment>
     )
   }
@@ -226,39 +240,25 @@ class Form extends ComponentBase {
     const { label, help } = fieldInfo
     return (
       <React.Fragment>
-        {inputsOnly && (
-          <React.Fragment>
-            {control}
-            {this.hasFieldError(name) && (
-              <div style={{ color: 'red' }}>{this.fieldErrorMessage(name)}</div>
-            )}
-          </React.Fragment>
-        )}
+        {inputsOnly && <React.Fragment>{control}</React.Fragment>}
         {!inputsOnly && (
           <Table.Row>
             <Table.Cell collapsing style={{ verticalAlign: 'top' }}>
               {label(args)}{' '}
-              {help(args) && (
-                <Icon
-                  circular
-                  link
-                  size="mini"
-                  name="help"
-                  inverted={helpState[name] || false}
-                  style={{ position: 'relative', top: -3 }}
-                  onClick={() => this.handleHelp(name)}
-                />
-              )}
+              {help &&
+                help(args) && (
+                  <Icon
+                    circular
+                    link
+                    size="mini"
+                    name="help"
+                    inverted={helpState[name] || false}
+                    style={{ position: 'relative', top: -3 }}
+                    onClick={() => this.handleHelp(name)}
+                  />
+                )}
             </Table.Cell>
-            <Table.Cell>
-              {control}
-              {helpState[name] && <Label pointing>{help(args)}</Label>}
-              {this.hasFieldError(name) && (
-                <div style={{ color: 'red' }}>
-                  {this.fieldErrorMessage(name)}
-                </div>
-              )}
-            </Table.Cell>
+            <Table.Cell>{control}</Table.Cell>
           </Table.Row>
         )}
       </React.Fragment>
@@ -266,7 +266,7 @@ class Form extends ComponentBase {
   }
 
   buildFormRows() {
-    const { input } = this.state
+    const { input, helpState } = this.state
     const { fields } = this.props
 
     return _.map(fields, (f, name) => {
@@ -276,14 +276,15 @@ class Form extends ComponentBase {
         value: input[name],
         name,
         fieldInfo: f,
+        errorMessage: this.fieldErrorMessage(name),
+        showHelp: helpState[name],
       }
       if (!displayIf(args)) return null
       const control = render({
         ...args,
-        error: this.hasFieldError(name),
         onBlur: this.handleBlur,
-        onChange: (value, cb = () => {}) =>
-          this.handleChange({ ...args, value }, cb),
+        onChange: (eventArgs, cb = () => {}) =>
+          this.handleChange({ ...args, ...eventArgs }, cb),
       })
 
       const resolvedType = type(args)
@@ -344,7 +345,8 @@ class Form extends ComponentBase {
 
 Form.defaultProps = {
   onChange: () => {},
-  onSubmit: () => {},
+  onBlur: () => {},
+  onSubmit: null,
   onCancel: null,
   onValid: () => {},
   onInvalid: () => {},

@@ -1,4 +1,7 @@
+import React from 'react'
+import { Label } from 'semantic-ui-react'
 import { field } from './field'
+import { fieldState } from './fieldState'
 
 function input(config = {}) {
   const finalConfig = {
@@ -7,6 +10,9 @@ function input(config = {}) {
     defaultValue: null,
     validate: true,
     inputLabel: '',
+    memo: '',
+    help: '',
+
     ...config,
   }
 
@@ -19,6 +25,24 @@ function input(config = {}) {
   }
 
   const fieldInfo = field(finalConfig)
+
+  fieldInfo.render = (render => args => {
+    const { errorMessage, showHelp } = args
+    const { help, memo } = fieldInfo
+    const inputArgs = fieldState({ fieldInfo, ...args })
+    const memoStr = memo(inputArgs)
+    const helpStr = help(inputArgs)
+    return (
+      <React.Fragment>
+        {render({ ...args, error: !!errorMessage })}
+        {helpStr && <Label pointing>{helpStr}</Label>}
+        {errorMessage && <div style={{ color: 'red' }}>{errorMessage}</div>}
+        {memoStr && (
+          <div style={{ margin: 5, marginBottom: 10 }}>{memoStr}</div>
+        )}
+      </React.Fragment>
+    )
+  })(fieldInfo.render)
 
   fieldInfo.defaultValue = (handler => args => {
     const value = handler(args)
@@ -33,7 +57,8 @@ function input(config = {}) {
   fieldInfo.validate = (handler => args => {
     const { value } = args
     const { required } = fieldInfo
-    const isRequired = required(args)
+    const inputArgs = fieldState(args)
+    const isRequired = required(inputArgs)
     const isEmpty =
       value === undefined ||
       value === null ||
@@ -41,7 +66,7 @@ function input(config = {}) {
     if (isRequired && isEmpty) {
       return `Required`
     }
-    return handler({ fieldInfo, ...args })
+    return handler({ fieldInfo, ...inputArgs })
   })(fieldInfo.validate)
 
   return fieldInfo

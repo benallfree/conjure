@@ -1,6 +1,7 @@
 import React from 'react'
 import { Header } from 'semantic-ui-react'
 import { field } from './field'
+import { fieldState } from './fieldState'
 
 function section(config = {}) {
   return field({
@@ -9,7 +10,8 @@ function section(config = {}) {
       const {
         fieldInfo: { label },
       } = props
-      return <Header h={3}>{label(props)}</Header>
+      const sectionArgs = fieldState(props)
+      return <Header h={3}>{label(sectionArgs)}</Header>
     },
     ...config,
   })

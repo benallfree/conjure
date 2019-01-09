@@ -1,19 +1,33 @@
 import numeral from 'numeral'
 import { range } from './range'
+import { createMaskArrayFromString } from './maskedText'
 
 function float(config = {}) {
-  const max = config.max || 0.0
-  const precision = config.precision || 2
-  const left = '0'.repeat(`${Math.max(1, max)}`.length)
-  const right = '0'.repeat(precision)
-  const mask = `${left}.${right}`
-  return range({
-    format: ({ value }) => numeral(parseFloat(value)).format(mask),
-    mask,
-    unmask: ({ value }) => value.replace(/[^\d.]/g, '').replace(/\.$/, ''),
+  const field = range({
     type: 'Float',
+    mask: ({ fieldInfo: { precision, max } }) => {
+      const left = '0'.repeat(`${Math.max(1, Math.trunc(max()))}`.length)
+      const right = '0'.repeat(precision())
+      return createMaskArrayFromString(`${left}.${right}`)
+    },
+    precision: 2,
+    unmask: /[^\d.]/g,
     ...config,
   })
+
+  field.conformValue = (parentCv => args => {
+    const {
+      value,
+      fieldInfo: { max, precision },
+    } = args
+    const left = '0'.repeat(`${Math.max(1, Math.trunc(max()))}`.length)
+    const right = '0'.repeat(precision())
+
+    const newValue = numeral(value).format(`${left}.${right}`)
+    return parentCv({ ...args, value: newValue })
+  })(field.conformValue)
+
+  return field
 }
 
 export { float }

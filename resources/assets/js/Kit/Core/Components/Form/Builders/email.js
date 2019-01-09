@@ -3,7 +3,6 @@ import { text } from './text'
 
 function email(config = {}) {
   return text({
-    mask: emailMask,
     validate: ({ value }) => {
       if (!value) return true
       const isValid =

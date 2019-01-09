@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import _ from 'lodash'
 import { Checkbox, List } from 'semantic-ui-react'
 import { field } from './field'
+import { fieldState } from './fieldState'
 
 function checklist(config = {}) {
   return field({
@@ -19,10 +20,11 @@ function checklist(config = {}) {
         error,
         value,
       } = props
+      const checklistArgs = fieldState(props)
 
       const doChange = newValue => {
         const { onBlur, onChange } = props
-        onChange(newValue, onBlur)
+        onChange({ ...checklistArgs, value: newValue }, onBlur)
       }
 
       const handleChange = key => (e, d) => {
@@ -35,7 +37,7 @@ function checklist(config = {}) {
 
       return (
         <List>
-          {_.map(options(props), opt => (
+          {_.map(options(checklistArgs), opt => (
             <List.Item key={opt.key}>
               <Checkbox
                 className={error ? 'error' : ''}

@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import _ from 'lodash'
 import { Input } from 'semantic-ui-react'
-import { diffChars } from 'diff'
 import { fieldState } from '../fieldState'
 
 function j(obj) {

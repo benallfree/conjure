@@ -35,7 +35,7 @@ function input(config = {}) {
     return (
       <React.Fragment>
         {render({ ...args, error: !!errorMessage })}
-        {helpStr && <Label pointing>{helpStr}</Label>}
+        {showHelp && helpStr && <Label pointing>{helpStr}</Label>}
         {errorMessage && <div style={{ color: 'red' }}>{errorMessage}</div>}
         {memoStr && (
           <div style={{ margin: 5, marginBottom: 10 }}>{memoStr}</div>

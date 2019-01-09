@@ -15,6 +15,10 @@ function float(config = {}) {
     ...config,
   })
 
+  field.unmask = (parent => args => {
+    return parseFloat(parent(args))
+  })(field.unmask)
+
   field.conformValue = (parentCv => args => {
     const {
       value,

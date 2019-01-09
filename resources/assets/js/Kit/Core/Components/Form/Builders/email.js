@@ -1,4 +1,3 @@
-import emailMask from 'text-mask-addons/dist/emailMask'
 import { text } from './text'
 
 function email(config = {}) {

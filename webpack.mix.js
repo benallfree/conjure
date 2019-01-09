@@ -4,9 +4,7 @@ const Dotenv = require('dotenv-webpack')
 mix.webpackConfig({
   plugins: [new Dotenv()],
 })
-mix
-  .react('resources/assets/js/Kit/app.js', 'public/js')
-  .sass('resources/assets/sass/app.scss', 'public/css')
+mix.react('resources/assets/js/Kit/app.js', 'public/js')
 
 if (mix.inProduction()) {
   mix.version()

@@ -7,6 +7,7 @@ import { Root } from './Root'
 import { services } from '~/services'
 import '@fortawesome/fontawesome-free/css/all.css'
 import 'semantic-ui-css/semantic.min.css'
+import '../../sass/app.scss'
 
 const id = setInterval(() => {
   if (document.getElementById('react-root')) {

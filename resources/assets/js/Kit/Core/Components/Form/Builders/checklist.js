@@ -7,7 +7,9 @@ import { fieldState } from './fieldState'
 function checklist(config = {}) {
   return field({
     defaultValue: info => {
-      const { options } = info
+      const {
+        fieldInfo: { options },
+      } = info
       const ret = {}
       _.each(options(info), (v, k) => {
         ret[v.key] = false

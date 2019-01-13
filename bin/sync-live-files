@@ -1,0 +1,4 @@
+#!/bin/bash
+source .env
+rsync -r $RSYNC_ROOT/storage/db storage -v
+rsync -r $RSYNC_ROOT/storage/clients storage -v

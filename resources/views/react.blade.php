@@ -8,7 +8,7 @@
     <title>{{ config('app.name', 'Conjure') }}</title>
 
     <!-- Scripts -->
-    <script src="{{ mix('js/app.js') }}" defer></script>
+    <script src="{{ mix('js/index.js') }}" defer></script>
     @routes
 </head>
 <body>

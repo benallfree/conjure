@@ -1,5 +1,28 @@
 import moment from 'moment-timezone'
-window._ = require('lodash')
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { Provider } from 'react-contextual'
+import axios from 'axios'
+import '@fortawesome/fontawesome-free/css/all.css'
+import 'semantic-ui-css/semantic.min.css'
+import '../../sass/app.scss'
+import { App } from './App'
 moment.tz.setDefault('UTC')
-window.axios = require('axios')
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
+
+function boot(Component, services) {
+  const id = setInterval(() => {
+    if (document.getElementById('react-root')) {
+      clearInterval(id)
+
+      ReactDOM.render(
+        <App services={services}>
+          <Component />
+        </App>,
+        document.getElementById('react-root'),
+      )
+    }
+  }, 10)
+}
+
+export { boot }

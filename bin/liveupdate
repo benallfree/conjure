@@ -1,4 +1,7 @@
 #!/bin/bash
+echo "Updating production"
+source ./env
+./bin/backup-db
 echo "Stopping workers..."
 sudo supervisorctl stop all
 git pull

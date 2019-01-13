@@ -4,7 +4,7 @@ import { Api } from '~/Api'
 
 const services = {
   routes,
-  Api,
+  Api: new Api(),
   user: null,
   message: null,
   clearUser: () => state => ({ user: new User() }),

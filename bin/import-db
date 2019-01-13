@@ -1,0 +1,6 @@
+#!/bin/bash
+source .env
+fname=${1:-`ls -A1 storage/db/*.gz | tail -n1`}
+echo "Importing ${fname}"
+gzip -dc $fname | mysql -u$DB_USERNAME -p$DB_PASSWORD -h$DB_HOST -P$DB_PORT $DB_DATABASE
+./artisan migrate

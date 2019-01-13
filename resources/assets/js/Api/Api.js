@@ -44,6 +44,4 @@ class Api extends ApiBase {
   }
 }
 
-const obj = new Api()
-
-export { obj as Api }
+export { Api }

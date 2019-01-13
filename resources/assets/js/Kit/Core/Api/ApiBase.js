@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import moment from 'moment'
-import { CancelToken } from 'axios'
+import axios, { CancelToken } from 'axios'
 import { ApiError } from './ApiError'
 import { BusinessRuleError } from './BusinessRuleError'
 

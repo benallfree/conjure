@@ -7,7 +7,11 @@
         "watch-poll": "npm run watch -- --watch-poll",
         "hot": "cross-env NODE_ENV=development node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js",
         "prod": "npm run production",
-        "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
+        "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+        "serve": "bin/serve",
+        "sync": "yarn sync:files && yarn sync:import:db",
+        "sync:files": "bin/sync-live-files",
+        "sync:import:db": "bin/import-db"
     },
     "devDependencies": {
         "@fortawesome/fontawesome-free": "^5.2.0",

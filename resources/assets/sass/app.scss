@@ -12,3 +12,13 @@
 .ui.checkbox.error label:active::before {
   background-color: #e0b4b4;
 }
+
+@media print {
+  body {
+    padding: 2.5cm;
+  }
+  .no-print,
+  .no-print * {
+    display: none !important;
+  }
+}

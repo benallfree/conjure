@@ -2,4 +2,4 @@
 source .env
 dbname="storage/db/backup-$(date +%s).sql.gz"
 echo "Backing up $dbname"
-mysqldump  --column-statistics=0 -u$DB_USERNAME -p$DB_PASSWORD -h$DB_HOST -P$DB_PORT $DB_DATABASE | gzip -9 > $dbname
+mysqldump -u$DB_USERNAME -p$DB_PASSWORD -h$DB_HOST -P$DB_PORT $DB_DATABASE | gzip -9 > $dbname

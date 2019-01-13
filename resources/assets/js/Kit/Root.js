@@ -25,6 +25,11 @@ class Root extends ComponentBase {
     return (
       <BrowserRouter>
         <React.Fragment>
+          <Route
+            exact
+            path="/"
+            render={props => <TopNav routes={routes} {...props} />}
+          />
           {_.map(routes, (r, key) => {
             if (r.chromeless) return null
             return (

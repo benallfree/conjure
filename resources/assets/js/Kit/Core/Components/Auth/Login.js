@@ -38,8 +38,8 @@ class Login extends ComponentBase {
         <Card.Content>
           <Form
             fields={this.fields}
-            saveButtonText="Log In"
-            saveButtonIcon="sign in"
+            submitButtonText="Log In"
+            submitButtonIcon="sign in"
             submittingMessage="Logging in..."
             submittedMessage="Logged in."
             inputsOnly

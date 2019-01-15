@@ -183,13 +183,13 @@ class Form extends ComponentBase {
   }
 
   saveButtons() {
-    const { allValid } = this.state
+    const { allValid, input } = this.state
     const save = this.asyncState('save')
     const {
       onSubmit,
       onCancel,
-      saveButtonText,
-      saveButtonIcon,
+      submitButtonText,
+      submitButtonIcon,
       cancelButtonText,
     } = this.props
     return (
@@ -197,7 +197,9 @@ class Form extends ComponentBase {
         {onCancel && (
           <Button negative onClick={this.handleCancel}>
             <Icon name="close" />
-            {cancelButtonText}
+            {typeof cancelButtonText === 'function'
+              ? cancelButtonText(input)
+              : cancelButtonText}
           </Button>
         )}
         {onSubmit && (
@@ -207,8 +209,10 @@ class Form extends ComponentBase {
             primary
             onClick={this.handleSave}
           >
-            {saveButtonIcon && <Icon name={saveButtonIcon} />}
-            {saveButtonText}
+            {submitButtonIcon && <Icon name={submitButtonIcon} />}
+            {typeof submitButtonText === 'function'
+              ? submitButtonText(input)
+              : submitButtonText}
           </Button>
         )}
       </React.Fragment>
@@ -350,8 +354,8 @@ Form.defaultProps = {
   onCancel: null,
   onValid: () => {},
   onInvalid: () => {},
-  saveButtonText: 'Save',
-  saveButtonIcon: null,
+  submitButtonText: 'Save',
+  submitButtonIcon: null,
   cancelButtonText: 'Cancel',
   inputsOnly: false,
   submittingMessage: 'Saving...',

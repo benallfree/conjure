@@ -13,9 +13,22 @@
   background-color: #e0b4b4;
 }
 
-@media print {
+@media screen {
+  html {
+    height: initial;
+  }
   body {
-    padding: 2.5cm;
+    height: initial;
+    margin-bottom: 30px;
+  }
+}
+
+@media print {
+  @page {
+    margin: 25mm;
+  }
+  body {
+    padding: none;
   }
   .no-print,
   .no-print * {

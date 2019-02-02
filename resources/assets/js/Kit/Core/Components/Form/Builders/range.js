@@ -4,8 +4,12 @@ import { maskedText, createMaskArrayFromString } from './maskedText'
 function range(config = {}) {
   const field = maskedText({
     type: 'Range',
-    mask: ({ fieldInfo: { max } }) =>
-      createMaskArrayFromString('0'.repeat(`${max()}`.length)),
+    mask: args => {
+      const {
+        fieldInfo: { max },
+      } = args
+      return createMaskArrayFromString('0'.repeat(`${max(args)}`.length))
+    },
     unmask: /[^\d]/g,
     min: 0,
     max: 100,
@@ -15,11 +19,13 @@ function range(config = {}) {
         value: v,
         fieldInfo: { min, max, conformValue },
       } = args
-      if (v < min() || v > max())
+      const minValue = min(args)
+      const maxValue = max(args)
+      if (v < minValue || v > maxValue)
         return `Value must be between ${conformValue({
           ...args,
-          value: min(),
-        })} and ${conformValue({ ...args, value: max() })}.`
+          value: minValue,
+        })} and ${conformValue({ ...args, value: maxValue })}.`
       return true
     },
     placeholderChar: '0',

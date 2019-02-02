@@ -13,7 +13,7 @@ function integer(config = {}) {
       value,
       fieldInfo: { max },
     } = args
-    const newValue = numeral(value).format('0'.repeat(`${max()}`.length))
+    const newValue = numeral(value).format('0'.repeat(`${max(args)}`.length))
     return parentCv({ ...args, value: newValue })
   })(field.conformValue)
 

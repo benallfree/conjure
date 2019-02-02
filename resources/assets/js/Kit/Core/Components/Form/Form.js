@@ -14,8 +14,9 @@ class Form extends ComponentBase {
     _.each(fields, (fieldInfo, name) => {
       const { defaultValue, validate } = fieldInfo
       if (!defaultValue) return
-      const v = defaultValue()
-      const isValid = validate({ value: v }) === true
+      const args = { form: input, fieldInfo }
+      const v = defaultValue(args)
+      const isValid = validate({ ...args, value: v }) === true
       allValid = allValid && isValid
       validState[name] = true
       input[name] = v === null ? '' : v

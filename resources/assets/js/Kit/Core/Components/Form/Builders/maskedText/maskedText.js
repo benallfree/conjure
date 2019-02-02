@@ -10,10 +10,14 @@ function maskedText(config = {}) {
     placeholderChar: '_',
     mask: '111',
     unmask: /[^\d]/g,
-    conformValue: ({ fieldInfo: { mask, placeholderChar }, value }) => {
+    conformValue: args => {
+      const {
+        fieldInfo: { mask, placeholderChar },
+        value,
+      } = args
       let pos = 0
       const strValue = `${value}`
-      const conformedValue = _.map(mask(), m => {
+      const conformedValue = _.map(mask(args), m => {
         const c = strValue.slice(pos, pos + 1)
 
         if (!(m instanceof RegExp)) {
@@ -22,9 +26,9 @@ function maskedText(config = {}) {
           }
           return m
         }
-        if (pos >= strValue.length) return placeholderChar()
+        if (pos >= strValue.length) return placeholderChar(args)
         if (c.match(m) === null) {
-          return placeholderChar()
+          return placeholderChar(args)
         }
         pos += 1
 

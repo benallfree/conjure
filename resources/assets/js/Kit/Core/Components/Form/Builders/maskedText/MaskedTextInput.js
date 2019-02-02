@@ -3,10 +3,6 @@ import _ from 'lodash'
 import { Input } from 'semantic-ui-react'
 import { fieldState } from '../fieldState'
 
-function j(obj) {
-  console.log(JSON.stringify(obj, null, 2))
-}
-
 class MaskedTextInput extends Component {
   constructor(props) {
     super(props)

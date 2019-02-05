@@ -4,6 +4,7 @@ echo "Stopping workers..."
 sudo supervisorctl stop all
 ./bin/backup-db
 git pull
+yarn
 composer install --no-dev
 ./artisan migrate
 ./artisan cache:clear

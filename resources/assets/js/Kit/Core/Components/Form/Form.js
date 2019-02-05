@@ -12,11 +12,13 @@ class Form extends ComponentBase {
     let allValid = true
     const validState = {}
     _.each(fields, (fieldInfo, name) => {
-      const { defaultValue, validate } = fieldInfo
+      const { defaultValue, validate, displayIf } = fieldInfo
       if (!defaultValue) return
       const args = { form: input, fieldInfo }
       const v = defaultValue(args)
-      const isValid = validate({ ...args, value: v }) === true
+      const isValid =
+        !displayIf({ ...args, value: v }) ||
+        validate({ ...args, value: v }) === true
       allValid = allValid && isValid
       validState[name] = true
       input[name] = v === null ? '' : v
@@ -73,6 +75,8 @@ class Form extends ComponentBase {
           value,
           name,
         }
+        if (!fieldInfo.displayIf(args)) return res
+
         const validResult = validate(args)
         const isValid = validResult === true
         return res && isValid
@@ -122,26 +126,6 @@ class Form extends ComponentBase {
   fieldErrorMessage = fieldName => {
     const { fieldErrors } = this.state
     return fieldErrors[fieldName]
-  }
-
-  validateAll = () => {
-    const { fields } = this.props
-
-    return _.reduce(
-      fields,
-      (res, f, name) => {
-        const { input } = this.state
-        const args = {
-          form: input,
-          fieldInfo: f,
-          value: input[name],
-          name,
-        }
-        const isValid = this.validate(args)
-        return res && isValid
-      },
-      true,
-    )
   }
 
   handleSave = () => {

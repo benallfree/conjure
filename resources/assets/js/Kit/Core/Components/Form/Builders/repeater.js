@@ -44,7 +44,7 @@ function repeater(config = {}) {
       return (
         <Form
           fields={fields}
-          inputsOnly
+          fieldsTemplate={Form.FieldsTemplates.INPUTS_ONLY}
           onChange={handleChange}
           onBlur={handleBlur}
         />

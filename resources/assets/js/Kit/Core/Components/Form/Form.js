@@ -1,8 +1,8 @@
-import React, { Component } from 'react'
 import _ from 'lodash'
-import { Table, Button, Message, Header, Icon, Label } from 'semantic-ui-react'
 import { subscribe } from 'react-contextual'
 import { ComponentBase } from '../ComponentBase'
+import { Standard, InputOnly } from './Renderers'
+import * as Builders from './Builders'
 
 @subscribe('ioc')
 class Form extends ComponentBase {
@@ -167,168 +167,10 @@ class Form extends ComponentBase {
     onCancel()
   }
 
-  saveButtons() {
-    const { allValid, input } = this.state
-    const save = this.asyncState('save')
-    const {
-      onSubmit,
-      onCancel,
-      submitButtonText,
-      submitButtonIcon,
-      cancelButtonText,
-    } = this.props
-    return (
-      <React.Fragment>
-        {onCancel && (
-          <Button negative onClick={this.handleCancel}>
-            <Icon name="close" />
-            {typeof cancelButtonText === 'function'
-              ? cancelButtonText(input)
-              : cancelButtonText}
-          </Button>
-        )}
-        {onSubmit && (
-          <Button
-            loading={save.isLoading}
-            disabled={!allValid || save.isLoading}
-            primary
-            onClick={this.handleSave}
-          >
-            {submitButtonIcon && <Icon name={submitButtonIcon} />}
-            {typeof submitButtonText === 'function'
-              ? submitButtonText(input)
-              : submitButtonText}
-          </Button>
-        )}
-      </React.Fragment>
-    )
-  }
-
-  renderSectionRow(control, fieldInfo, args) {
-    const { inputsOnly } = this.props
-    if (inputsOnly) {
-      return (
-        <React.Fragment>
-          <div style={{ marginTop: 20 }}>{control}</div>
-        </React.Fragment>
-      )
-    }
-    return (
-      <Table.Row>
-        <Table.Cell style={{ backgroundColor: 'initial' }} colSpan={2}>
-          <div style={{ marginTop: 20 }}>{control}</div>
-        </Table.Cell>
-      </Table.Row>
-    )
-  }
-
-  renderDefaultRow(control, fieldInfo, args) {
-    const { helpState } = this.state
-    const { inputsOnly } = this.props
-    const { name } = args
-    const { label, help } = fieldInfo
-    return (
-      <React.Fragment>
-        {inputsOnly && <React.Fragment>{control}</React.Fragment>}
-        {!inputsOnly && (
-          <Table.Row>
-            <Table.Cell collapsing style={{ verticalAlign: 'top' }}>
-              {label(args)}{' '}
-              {help &&
-                help(args) && (
-                  <Icon
-                    circular
-                    link
-                    size="mini"
-                    name="help"
-                    inverted={helpState[name] || false}
-                    style={{ position: 'relative', top: -3 }}
-                    onClick={() => this.handleHelp(name)}
-                  />
-                )}
-            </Table.Cell>
-            <Table.Cell>{control}</Table.Cell>
-          </Table.Row>
-        )}
-      </React.Fragment>
-    )
-  }
-
-  buildFormRows() {
-    const { input, helpState } = this.state
-    const { fields } = this.props
-
-    return _.map(fields, (f, name) => {
-      const { type, displayIf, render } = f
-      const args = {
-        form: input,
-        value: input[name],
-        name,
-        fieldInfo: f,
-        errorMessage: this.fieldErrorMessage(name),
-        showHelp: helpState[name],
-      }
-      if (!displayIf(args)) return null
-      const control = render({
-        ...args,
-        onBlur: this.handleBlur,
-        onChange: (eventArgs, cb = () => {}) =>
-          this.handleChange({ ...args, ...eventArgs }, cb),
-      })
-
-      const resolvedType = type(args)
-      switch (resolvedType) {
-        case 'Section':
-          return this.renderSectionRow(control, f, args)
-        default:
-          return this.renderDefaultRow(control, f, args)
-      }
-    })
-  }
-
   renderLoaded() {
-    const save = this.asyncState('save')
-    const { inputsOnly, submittedMessage, submittingMessage } = this.props
-
-    const saveButtons = this.saveButtons()
-
-    const rows = this.buildFormRows()
-
-    return (
-      <React.Fragment>
-        {save.isLoaded && <Message success>{submittedMessage}</Message>}
-        {save.isLoading && <Message>{submittingMessage}</Message>}
-        {save.error && (
-          <Message error>
-            {this.fieldErrorMessage('*') ||
-              'Please correct the errors below and try again.'}
-          </Message>
-        )}
-        {inputsOnly && (
-          <React.Fragment>
-            {_.map(rows, (r, idx) => (
-              <div key={idx} style={{ marginBottom: 5 }}>
-                {r}
-              </div>
-            ))}
-            {saveButtons}
-          </React.Fragment>
-        )}
-        {!inputsOnly && (
-          <Table definition>
-            <Table.Body>
-              {rows}
-              <Table.Row>
-                <Table.Cell />
-                <Table.Cell style={{ textAlign: 'right' }}>
-                  {saveButtons}
-                </Table.Cell>
-              </Table.Row>
-            </Table.Body>
-          </Table>
-        )}
-      </React.Fragment>
-    )
+    const { renderer } = this.props
+    const r = renderer.create(this)
+    return r.render()
   }
 }
 
@@ -342,9 +184,17 @@ Form.defaultProps = {
   submitButtonText: 'Save',
   submitButtonIcon: null,
   cancelButtonText: 'Cancel',
-  inputsOnly: false,
   submittingMessage: 'Saving...',
   submittedMessage: 'Saved.',
+  renderer: Standard,
 }
+
+Form.Renderers = {
+  Standard,
+  InputOnly,
+}
+
+console.log({ Builders })
+Form.Builders = Builders
 
 export { Form }

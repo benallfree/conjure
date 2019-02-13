@@ -2,7 +2,10 @@ import React, { Component } from 'react'
 import { Card } from 'semantic-ui-react'
 import changeCase from 'change-case'
 import { subscribe } from 'react-contextual'
-import { ComponentBase, Form, email, password } from '..'
+import _ from 'lodash'
+import { ComponentBase, Form } from '..'
+
+const { email, password } = Form.Builders
 
 @subscribe('ioc')
 class Login extends ComponentBase {
@@ -38,11 +41,11 @@ class Login extends ComponentBase {
         <Card.Content>
           <Form
             fields={this.fields}
+            renderer={Form.Renderers.InputOnly}
             submitButtonText="Log In"
             submitButtonIcon="sign in"
             submittingMessage="Logging in..."
             submittedMessage="Logged in."
-            inputsOnly
             onSubmit={this.handleLogin}
           />
         </Card.Content>

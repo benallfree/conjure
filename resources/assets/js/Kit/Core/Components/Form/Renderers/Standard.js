@@ -77,14 +77,20 @@ class Standard {
     const {
       onSubmit,
       onCancel,
+      submitButtonEnabled,
       submitButtonText,
       submitButtonIcon,
       cancelButtonText,
+      cancelButtonEnabled,
     } = this.form.props
     return (
       <React.Fragment>
         {onCancel && (
-          <Button negative onClick={this.form.handleCancel}>
+          <Button
+            negative
+            onClick={this.form.handleCancel}
+            disabled={!cancelButtonEnabled}
+          >
             <Icon name="close" />
             {typeof cancelButtonText === 'function'
               ? cancelButtonText(input)
@@ -94,7 +100,7 @@ class Standard {
         {onSubmit && (
           <Button
             loading={save.isLoading}
-            disabled={!allValid || save.isLoading}
+            disabled={!submitButtonEnabled || !allValid || save.isLoading}
             primary
             onClick={this.form.handleSave}
           >

@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { subscribe } from 'react-contextual'
 import { ComponentBase } from '../ComponentBase'
-import { Standard, InputOnly } from './Renderers'
+import * as Renderers from './Renderers'
 import * as Builders from './Builders'
 
 @subscribe('ioc')
@@ -181,20 +181,17 @@ Form.defaultProps = {
   onCancel: null,
   onValid: () => {},
   onInvalid: () => {},
+  submitButtonEnabled: true,
   submitButtonText: 'Save',
   submitButtonIcon: null,
   cancelButtonText: 'Cancel',
+  cancelButtonEnabled: true,
   submittingMessage: 'Saving...',
   submittedMessage: 'Saved.',
-  renderer: Standard,
+  renderer: Renderers.Standard,
 }
 
-Form.Renderers = {
-  Standard,
-  InputOnly,
-}
-
-console.log({ Builders })
+Form.Renderers = Renderers
 Form.Builders = Builders
 
 export { Form }

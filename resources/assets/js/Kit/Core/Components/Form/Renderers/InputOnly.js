@@ -12,14 +12,14 @@ class InputOnly extends Standard {
   row(type) {
     switch (type) {
       case 'Section':
-        return (form, control, fieldInfo, args) => (
+        return (control, fieldInfo, args) => (
           <React.Fragment>
             <div style={{ marginTop: 20 }}>{control}</div>
           </React.Fragment>
         )
 
       default:
-        return (form, control, fieldInfo, args) => {
+        return (control, fieldInfo, args) => {
           return (
             <React.Fragment>
               <React.Fragment>{control}</React.Fragment>

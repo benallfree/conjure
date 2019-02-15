@@ -55,9 +55,34 @@ class Form extends ComponentBase {
     const { name, value } = args
     const mutatedInput = { ...input, [name]: value }
     const mutatedArgs = { ...args, form: mutatedInput }
-    this.setState({ input: mutatedInput, changedSinceLastBlur: true }, () =>
-      this.setState({ allValid: this.calcAllValid() }, () => cb(mutatedArgs)),
-    )
+    this.setState({ input: mutatedInput, changedSinceLastBlur: true }, () => {
+      const { fields } = this.props
+      const watchFieldNames = _.uniq(
+        _.reduce(
+          fields,
+          (res, fieldInfo, fieldName) => {
+            const { watch } = fieldInfo
+            if (!watch) return res
+            const watches = watch({ ...mutatedArgs, name: fieldName })
+            if (_.indexOf(watches, name) >= 0) res.push(fieldName)
+            return res
+          },
+          [],
+        ),
+      )
+      _.each(watchFieldNames, fieldName => {
+        const field = fields[fieldName]
+        if (!field) return
+        const form = this.state.input
+        this.validate({
+          form,
+          fieldInfo: field,
+          name: fieldName,
+          value: form[fieldName],
+        })
+      })
+      this.setState({ allValid: this.calcAllValid() }, () => cb(mutatedArgs))
+    })
     this.props.onChange(name, value, mutatedInput)
   }
 

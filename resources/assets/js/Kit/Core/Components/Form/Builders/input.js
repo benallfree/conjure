@@ -9,6 +9,7 @@ function input(config = {}) {
     required: false,
     defaultValue: null,
     validate: true,
+    watch: [],
     inputLabel: '',
     memo: '',
     help: '',

@@ -1,8 +1,10 @@
 const mix = require('laravel-mix')
+const Dotenv = require('dotenv-webpack')
 
-mix
-  .react('resources/assets/js/app.js', 'public/js')
-  .sass('resources/assets/sass/app.scss', 'public/css')
+mix.webpackConfig({
+  plugins: [new Dotenv()],
+})
+mix.react('./resources/assets/js/index.js', 'public/js')
 
 if (mix.inProduction()) {
   mix.version()

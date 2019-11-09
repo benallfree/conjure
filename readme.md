@@ -4,7 +4,7 @@ Laravel Conjure is a complete Laravel frontend and backend setup, ready to creat
 
 Out of the box, Conjure has:
 
-- Authentication (Passport)
+- Authentication
 - Versioned API routing
 - Traditional page routing
 - React
@@ -29,7 +29,6 @@ composer install
 yarn
 ./artisan key:generate
 ./artisan migrate
-./artisan passport:install
 ```
 
 ## Usage Guide
@@ -47,11 +46,11 @@ Create `resources/assets/js/components/MyComponent/Main.js`
 ```js
 import React, { Component } from 'react'
 import _ from 'lodash'
-import { Api } from '../../Api'
+import { Api } from '../~/Api'
 import { AsyncBase } from '../AsyncBase'
 
 class Main extends ComponentBase {
-  loadData() {
+  loadState() {
     return Api.ping()
   }
 
@@ -89,7 +88,7 @@ Edit `resources/views/layouts/app.blade.php`
 Create `resources/assets/js/Models/MyModel.js`
 
 ```js
-import { ModelBase } from './ModelBase'
+import { ModelBase } from '~/Kit'
 
 class MyModel extends ModelBase {}
 
@@ -140,7 +139,7 @@ async myApiCall() {
 Finally, create `resources/assets/js/Models/SearchResult.js` to receive your API results
 
 ```js
-import { ModelBase } from './ModelBase'
+import { ModelBase } from '~/Kit'
 
 class SearchResult extends ModelBase {}
 
@@ -161,7 +160,7 @@ Instead of calling `render()` directly, call `renderLoaded()`. This ensures that
 
 **Type #1: Initializing with Async Data**
 
-If your component can't be used without first loading some async data, override the `loadData()` method. Your `renderLoaded()`
+If your component can't be used without first loading some async data, override the `loadState()` method. Your `renderLoaded()`
 
 **Type #2: Performing Async Operations**
 

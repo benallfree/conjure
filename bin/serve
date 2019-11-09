@@ -1,0 +1,3 @@
+#!/bin/bash
+source .env
+PHP_BINARY=$(which php) ./artisan serve

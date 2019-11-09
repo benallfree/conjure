@@ -8,6 +8,15 @@
       {
         "globals": ["Error", "Array"]
       }
+    ],
+    [
+      "module-resolver",
+      {
+        "root": ["./resources/assets/js"],
+        "alias": {
+          "~": "./resources/assets/js"
+        }
+      }
     ]
   ]
 }

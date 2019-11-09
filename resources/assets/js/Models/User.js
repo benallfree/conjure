@@ -1,4 +1,4 @@
-import { ModelBase } from './ModelBase'
+import { ModelBase } from '~/Kit'
 
 class User extends ModelBase {}
 

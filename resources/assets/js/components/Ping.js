@@ -1,19 +1,22 @@
-import React, { Component } from 'react'
+import React from 'react'
 import { Container, Button, Message } from 'semantic-ui-react'
 import _ from 'lodash'
-import { Api } from '../Api'
-import { ComponentBase } from './Kit'
+import { subscribe } from 'react-contextual'
+import { ComponentBase } from '~/Kit'
 
+@subscribe('ioc')
 class Ping extends ComponentBase {
   handlePing = i => {
-    this.async(() => Api.ping(), i)
+    this.setState({
+      [i]: this.api.ping(),
+    })
   }
 
   renderLoaded() {
     return (
       <Container>
         {_.map(_.range(5), i => {
-          const { isLoaded, isLoading, response, error } = this.async(i)
+          const { isLoaded, isLoading, response, error } = this.asyncState(i)
           return (
             <Container key={i} style={{ marginBottom: 10 }}>
               <Button loading={isLoading} onClick={() => this.handlePing(i)}>

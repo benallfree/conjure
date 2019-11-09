@@ -1,19 +1,37 @@
-// Fonts
-@import url('https://fonts.googleapis.com/css?family=Nunito');
-
-// Variables
-@import 'variables';
-
-// Bootstrap
-@import '~bootstrap/scss/bootstrap';
-
-// CSS fix for Semantic/Bootstrap conflict
-.close {
-  float: initial;
-  color: inherit;
+.ui.checkbox.error .box:before,
+.ui.checkbox.error label:before,
+.ui.checkbox.error input:checked ~ .box:before,
+.ui.checkbox.error input:checked ~ label:before,
+.ui.checkbox.error input:not([type='radio']):indeterminate:focus ~ .box:before,
+.ui.checkbox.error input:not([type='radio']):indeterminate:focus ~ label:before,
+.ui.checkbox.error .box:hover::before,
+.ui.checkbox.error label:hover::before,
+.ui.checkbox.error input:checked:focus ~ .box:before,
+.ui.checkbox.error input:checked:focus ~ label:before,
+.ui.checkbox.error .box:active::before,
+.ui.checkbox.error label:active::before {
+  background-color: #e0b4b4;
 }
 
-.navbar-laravel {
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+@media screen {
+  html {
+    height: initial;
+  }
+  body {
+    height: initial;
+    margin-bottom: 30px;
+  }
+}
+
+@media print {
+  @page {
+    margin: 25mm;
+  }
+  body {
+    padding: none;
+  }
+  .no-print,
+  .no-print * {
+    display: none !important;
+  }
 }
